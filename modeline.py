@@ -56,7 +56,7 @@ def fileAnalyzer(fname):
             elif l == mplStart:
                 print 'First line is MPL instead of VIM modeline'
             else:
-                print 'BLAAHAHAHA\n\n\n\n\n\nBFOOOOOOO'
+                print 'ERROR!!!!\n\n\n'
                 print 'First line of', fname, 'does not match mode line:', l[:-1]
                 exit(-1)
 
@@ -72,7 +72,7 @@ def fileAnalyzer(fname):
             elif l.startswith('/* vim:'):
                 print 'Second line is weird vim mode line:', l[:-1]
             else:
-                print 'BLAAHAHAHA\n\n\n\n\n\nBFOOOOOOO'
+                print 'ERROR!!!!\n\n\n'
                 print 'Second line of', fname, 'does not match:', l[:-1]
                 exit(-1)
 
