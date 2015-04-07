@@ -17,10 +17,10 @@ tabPatt = re.compile("^(\t+)")
 
 
 # from https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Coding_Style#Mode_Line
-firstModeLine = "/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-"
+firstModeLine = "/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */\n"
 secondModeLine = "/* vim: set ts=8 sts=2 et sw=2 tw=80: */\n"
 
-firstModeLinePatt = re.compile("^/\* -\*- Mode: C\+\+; tab-width: (\d+); indent-tabs-mode: nil; c-basic-offset: (\d+) -\*-")
+firstModeLinePatt = re.compile("^/\* -\*- Mode: C\+\+; tab-width: (\d+); indent-tabs-mode: nil; c-basic-offset: (\d+) -\*-(.*)$")
 
 mplStart = "/* This Source Code Form is subject to the terms of the Mozilla Public\n"
 mplOtherStart = " * This Source Code Form is subject to the terms of the Mozilla Public\n"
@@ -35,8 +35,14 @@ fileBlackList = [
   ]
 
 
+fixFiles = False
+
+
 def fileAnalyzer(fname):
     f = open(fname, "r")
+
+    if fixFiles:
+        newFile = open(fname + ".intermediate", "w")
 
     count0 = 0
     count2 = 0
@@ -45,14 +51,26 @@ def fileAnalyzer(fname):
 
     whichLine = 0
 
+    anyErrors = False
+    openMPLComment = False
+
     for l in f:
         whichLine += 1
 
         # If we're at the start of a file, see if it has the proper modeline.
         if whichLine == 1 and l != firstModeLine:
+            anyErrors = True
             fmlp = firstModeLinePatt.match(l)
             if fmlp:
                 print 'First line of', fname, 'does not quite match mode line:', fmlp.group(1), fmlp.group(2)
+
+                if fmlp.group(3) != " */":
+                    if fmlp.group(3) == "":
+                        # Need to open the comment on the MPL line.
+                        openMPLComment = True
+                    else:
+                        print 'Weird ending for first mode line:', fmlp.group(3)
+                        exit(-1)
             elif l == mplStart:
                 print 'First line is MPL instead of VIM modeline'
             else:
@@ -61,6 +79,7 @@ def fileAnalyzer(fname):
                 exit(-1)
 
         if whichLine == 2 and l != secondModeLine:
+            anyErrors = True
             if l == mplStart:
                 print 'Second line is MPL instead of VIM modeline'
             elif l == mplOtherStart:
@@ -94,9 +113,16 @@ def fileAnalyzer(fname):
         elif indent % 2 != 0:
             countOther += 1
 
-    # XXX space it out for now
-    print
+    f.close()
 
+    if fixFiles:
+        newFile.close()
+        os.rename(fname + ".intermediate", fname)
+
+    if anyErrors:
+        print
+
+    # Check that this file is probably indented by 2.
     probablyIndentedBy = -1
     if (count2 + count4 + countOther) / 2 < 10:
         # This file is small, so just assume it is okay.
@@ -143,6 +169,7 @@ for fileName in os.listdir(base):
 
     if fileInBlackList(fileName):
         print 'Skipping file', fileName, 'due to blacklist'
+        print
         continue
 
     fileAnalyzer(fileName)
