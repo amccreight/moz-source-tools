@@ -100,20 +100,24 @@ def fileAnalyzer(fname):
     probablyIndentedBy = -1
     if (count2 + count4 + countOther) / 2 < 10:
         # This file is small, so just assume it is okay.
-        return 2
-    if count2 > (count2 + count4 + countOther) / 2:
         probablyIndentedBy = 2
-    if count4 > (count2 + count4 + countOther) / 2:
-        assert count2 <= (count2 + count4 + countOther) / 2
-        probablyIndentedBy = 4
-    if countOther > (count2 + count4 + countOther) / 2:
-        print 'Weird file', fname
-        print '\tcount0: ', count0
-        print '\tcount2: ', count2
-        print '\tcount4: ', count4
-        print '\tcountOther: ', countOther
-        assert False
-    return probablyIndentedBy
+    else:
+        if count2 > (count2 + count4 + countOther) / 2:
+            probablyIndentedBy = 2
+        if count4 > (count2 + count4 + countOther) / 2:
+            assert count2 <= (count2 + count4 + countOther) / 2
+            probablyIndentedBy = 4
+        if countOther > (count2 + count4 + countOther) / 2:
+            print 'Weird file', fname
+            print '\tcount0: ', count0
+            print '\tcount2: ', count2
+            print '\tcount4: ', count4
+            print '\tcountOther: ', countOther
+            assert False
+
+    if probablyIndentedBy != 2:
+        print 'File', fname, 'was probably indented by', probablyIndentedBy, 'instead of by 2'
+        exit(-1)
 
 
 def fileInBlackList(fileName):
