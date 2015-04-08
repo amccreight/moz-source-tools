@@ -30,10 +30,12 @@ mplSpacer = " *\n"
 
 # Don't try to fix these files.
 fileBlackList = [
-    'xpcom/base/ErrorList.h',
-    'xpcom/base/pure.h',
-    'xpcom/build/mach_override.h',
-    'xpcom/glue/nsQuickSort.cpp',
+    'xpcom/base/ErrorList.h', # Not a regular source file.
+    'xpcom/base/pure.h', # Imported.
+    'xpcom/build/mach_override.h', # Imported.
+    'xpcom/glue/nsQuickSort.cpp', # Imported.
+    'xpcom/glue/tests/gtest/TestFileUtils.cpp', # Public domain instead of MPL.
+    'xpcom/io/crc32c.h', # Odd tiny header.
   ]
 
 # Don't complain about apparently invalid indentation for these files.
