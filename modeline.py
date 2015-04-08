@@ -35,13 +35,10 @@ fileBlackList = [
   ]
 
 
-fixFiles = False
-
-
-def fileAnalyzer(fname):
+def fileAnalyzer(args, fname):
     f = open(fname, "r")
 
-    if fixFiles:
+    if args.fixFiles:
         newFile = open(fname + ".intermediate", "w")
 
     count0 = 0
@@ -58,7 +55,7 @@ def fileAnalyzer(fname):
 
         # If we're at the start of a file, see if it has the proper modeline.
         if whichLine == 1 and l != firstModeLine:
-            if fixFiles:
+            if args.fixFiles:
                 newFile.write(firstModeLine)
 
             anyErrors = True
@@ -71,7 +68,7 @@ def fileAnalyzer(fname):
                     exit(-1)
             elif l == mplStart:
                 print 'First line of', fname, 'is MPL instead of Emacs modeline'
-                if fixFiles:
+                if args.fixFiles:
                     newFile.write(secondModeLine)
                     newFile.write(mplStart)
                 whichLine += 2
@@ -81,19 +78,19 @@ def fileAnalyzer(fname):
                 exit(-1)
 
         elif whichLine == 2 and l != secondModeLine:
-            if fixFiles:
+            if args.fixFiles:
                 newFile.write(secondModeLine)
 
             anyErrors = True
             if l == mplStart or l == mplOtherStart:
                 print 'Second line is MPL instead of VIM modeline'
-                if fixFiles:
+                if args.fixFiles:
                     newFile.write(mplStart)
                 whichLine += 1
             elif l == mplSpacer:
                 print 'Second line is MPL spacer'
                 whichLine -= 1
-            elif l.startswith('/* vim:'):
+            elif l.startswith('/* vim:') or l.startswith('// vim:'):
                 print 'Second line is weird vim mode line:', l[:-1]
             else:
                 print 'ERROR!!!!\n\n\n'
@@ -102,7 +99,7 @@ def fileAnalyzer(fname):
 
         elif whichLine == 3 and l != mplStart:
             if l == mplOtherStart:
-                if fixFiles:
+                if args.fixFiles:
                     newFile.write(mplStart)
                 anyErrors = True
                 print 'Third line is not MPL proper start'
@@ -111,7 +108,7 @@ def fileAnalyzer(fname):
                 print 'Third line of', fname, 'is weird:', l[:-1]
                 exit(-1)
 
-        elif fixFiles:
+        elif args.fixFiles:
             newFile.write(l)
 
 
@@ -136,7 +133,7 @@ def fileAnalyzer(fname):
 
     f.close()
 
-    if fixFiles:
+    if args.fixFiles:
         newFile.close()
         os.rename(fname + ".intermediate", fname)
 
@@ -178,6 +175,9 @@ parser = argparse.ArgumentParser(description='Analyze mode lines.')
 parser.add_argument('directory', metavar='D',
                     help='Full path of directory to open files from')
 
+parser.add_argument('--fix', dest='fixFiles', action='store_true',
+                    help='Fix any errors that are found')
+
 args = parser.parse_args()
 
 base = args.directory
@@ -193,4 +193,4 @@ for fileName in os.listdir(base):
         print
         continue
 
-    fileAnalyzer(fileName)
+    fileAnalyzer(args, fileName)
