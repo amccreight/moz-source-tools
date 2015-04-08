@@ -20,7 +20,8 @@ tabPatt = re.compile("^(\t+)")
 firstModeLine = "/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */\n"
 secondModeLine = "/* vim: set ts=8 sts=2 et sw=2 tw=80: */\n"
 
-firstModeLinePatt = re.compile("^\s*/\* -\*-\s+Mode: (?:C|C\+\+|c\+\+|IDL); (?:tab-width|c-basic-offset): \d+; indent-tabs-mode: nil; (?:tab-width|c-basic-offset): \d+;? -\*-\s*(.*)$")
+firstModeLinePatt = re.compile("^\s*/\* (?:-|a)\*-\s+Mode: (?:C|C\+\+|c\+\+|IDL);? (?:tab-width|c-basic-offset): \d+; indent-tabs-mode: nil; (?:tab-width|c-basic-offset): \d+;? -\*-\s*(.*)$")
+# For some reason, many SVG mode lines start with a*- rather than -*-.
 
 commentClosePatt = re.compile("^\s*\*/\n")
 
@@ -35,6 +36,8 @@ wideDirBlackList = [
     'xpcom/reflect', # This dir seems all 4-space indented.
     'dom/media/', # There's a lot of this, and lots is imported.
     'dom/plugins/',
+    'dom/xslt/',
+    'dom/xul/',
   ]
 
 # Don't try to fix files in these directories, which have a lot of
@@ -48,12 +51,17 @@ dirBlackList = [
     'xpcom/tests/',
     'dom/camera/',
     'dom/canvas/',
+    'dom/system/qt/',
+    # Lots of Apache-style licenses in this directory that aren't dealt with by the script.
+    'dom/system/gonk/',
+    'dom/system/gonk/android_audio/',
   ]
 
 # Don't try to fix these files.
 fileBlackList = [
-    # Not a regular source file.
+    # Not regular source files.
     'xpcom/base/ErrorList.h',
+    'dom/webidl/CSS2PropertiesProps.h',
     # Imported.
     'xpcom/base/pure.h',
     'xpcom/build/mach_override.h',
@@ -95,6 +103,8 @@ fileBlackList = [
     'dom/ipc/TabParent.h',
     'dom/jsurl/nsJSProtocolHandler.cpp',
     'dom/jsurl/nsJSProtocolHandler.h',
+    'dom/xml/nsXMLPrettyPrinter.cpp',
+    'dom/xml/nsXMLPrettyPrinter.h',
   ]
 
 # Don't complain about apparently invalid indentation for these files.
@@ -137,6 +147,13 @@ indentWhiteList = [
     'dom/network/NetUtils.h',
     'dom/quota/StorageMatcher.h',
     'dom/security/nsCSPContext.h',
+    'dom/security/nsCSPParser.h',
+    'dom/security/nsCSPUtils.h',
+    'dom/svg/SVGAnimateTransformElement.cpp',
+    'dom/svg/SVGSymbolElement.cpp',
+    'dom/telephony/TelephonyCallInfo.cpp',
+    'dom/telephony/ipc/TelephonyIPCSerializer.h',
+    'dom/tv/FakeTVService.h',
   ]
 
 
@@ -209,6 +226,8 @@ def fileAnalyzer(args, fname):
                     print '\n\nERROR!!!!'
                     print 'Weird ending for first mode line:', fmlp.group(1),
                     exit(-1)
+            elif l == '/* -*- Mode: c++; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-\n':
+                print 'First line of', fname, 'had dom/system/android/ style modeline'
             elif l == mplStart:
                 print 'First line of', fname, 'is MPL instead of Emacs modeline'
                 if args.fixFiles:
