@@ -28,14 +28,36 @@ mplSecond = " * License, v. 2.0. If a copy of the MPL was not distributed with t
 mplSpacer = " *\n"
 
 
+# Don't try to fix files in these directories, which have a lot of
+# files with 4-space indent.
+dirBlackList = [
+    'xpcom/tests',
+    'xpcom/tests/static-checker',
+    'xpcom/tests/windows',
+    'xpcom/typelib/xpt',
+    'xpcom/typelib/xpt/tests',
+  ]
+
+dirBlackListPatt = re.compile("%s$".format("|".join(dirBlackList)))
+
 # Don't try to fix these files.
 fileBlackList = [
-    'xpcom/base/ErrorList.h', # Not a regular source file.
-    'xpcom/base/pure.h', # Imported.
-    'xpcom/build/mach_override.h', # Imported.
-    'xpcom/glue/nsQuickSort.cpp', # Imported.
-    'xpcom/glue/tests/gtest/TestFileUtils.cpp', # Public domain instead of MPL.
-    'xpcom/io/crc32c.h', # Odd tiny header.
+    # Not a regular source file.
+    'xpcom/base/ErrorList.h',
+    # Imported.
+    'xpcom/base/pure.h',
+    'xpcom/build/mach_override.h',
+    'xpcom/glue/nsQuickSort.cpp',
+    # Public domain instead of MPL.
+    'xpcom/glue/tests/gtest/TestFileUtils.cpp',
+    # Odd tiny header.
+    'xpcom/io/crc32c.h',
+    # Partially or fully 4-space indented.
+    'xpcom/tests/gtest/TestSynchronization.cpp',
+    'xpcom/tests/gtest/TestTimeStamp.cpp',
+    'xpcom/base/nsAgg.h',
+    'xpcom/components/ModuleUtils.h',
+    'xpcom/tests/gtest/TestXPIDLString.cpp', # Also missing license header.
   ]
 
 # Don't complain about apparently invalid indentation for these files.
@@ -43,6 +65,10 @@ indentWhiteList = [
     # Mostly function decls, so there are few normal lines.
     'xpcom/io/nsStreamUtils.h',
     'xpcom/string/nsReadableUtils.h',
+    'xpcom/build/nsXULAppAPI.h',
+    # Formatting is a little weird, but looks 2-space indented to me.
+    'xpcom/tests/gtest/TestThreads.cpp',
+    'xpcom/tests/gtest/TestUTF.cpp',
   ]
 
 
@@ -51,8 +77,8 @@ def fileInBlackList(base, fileName):
     if 'xpcom/reflect' in base:
         return True
 
-    # This directory is kind of a mess.
-    if base.endswith('xpcom/tests'):
+    dblm = dirBlackListPatt.match(base)
+    if dblm:
         return True
 
     fullFileName = base + '/' + fileName
