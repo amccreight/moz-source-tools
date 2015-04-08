@@ -39,7 +39,9 @@ fileBlackList = [
   ]
 
 # Don't complain about apparently invalid indentation for these files.
-indentWhiteList = []
+indentWhiteList = [
+    'xpcom/io/nsStreamUtils.h', # Mostly function decls, so few normal lines.
+  ]
 
 
 def fileInBlackList(fileName):
@@ -182,12 +184,15 @@ def fileAnalyzer(args, fname):
             assert count2 <= (count2 + count4 + countOther) / 2
             probablyIndentedBy = 4
         if countOther > (count2 + count4 + countOther) / 2:
-            print 'Weird file', fname
-            print '\tcount0: ', count0
-            print '\tcount2: ', count2
-            print '\tcount4: ', count4
-            print '\tcountOther: ', countOther
-            assert False
+            if fileInIndentWhiteList(fname):
+                probablyIndentedBy = 2
+            else:
+                print 'File with lots of oddly indented lines', fname
+                print '\tcount0: ', count0
+                print '\tcount2: ', count2
+                print '\tcount4: ', count4
+                print '\tcountOther: ', countOther
+                exit(-1)
 
     if probablyIndentedBy != 2 and not fileInIndentWhiteList(fname):
         print 'Weird file', fname
