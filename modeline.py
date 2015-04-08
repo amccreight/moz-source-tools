@@ -36,9 +36,8 @@ fileBlackList = [
   ]
 
 # Don't complain about apparently invalid indentation for these files.
-indentWhiteList = [
-    'xpcom/build/ServiceList.h',
-  ]
+indentWhiteList = []
+
 
 def fileInBlackList(fileName):
     for f in fileBlackList:
@@ -170,8 +169,8 @@ def fileAnalyzer(args, fname):
 
     # Check that this file is probably indented by 2.
     probablyIndentedBy = -1
-    if (count2 + count4 + countOther) / 2 < 10:
-        # This file is small, so just assume it is okay.
+    if count2 + count4 + countOther < 30:
+        # This file doesn't have many indented lines, so just assume it is okay.
         probablyIndentedBy = 2
     else:
         if count2 > (count2 + count4 + countOther) / 2:
