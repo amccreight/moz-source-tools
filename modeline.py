@@ -88,8 +88,7 @@ def fileAnalyzer(args, fname):
                     newFile.write(mplStart)
                 whichLine += 1
             elif l == mplSpacer:
-                print 'Second line is MPL spacer'
-                whichLine -= 1
+                print 'Replacing MPL spacer with vim mode line.'
             elif l.startswith('/* vim:') or l.startswith('// vim:'):
                 print 'Second line is weird vim mode line:', l[:-1]
             else:
