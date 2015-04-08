@@ -273,7 +273,7 @@ def fileAnalyzer(args, fname):
                 exit(-1)
 
         elif whichLine == 3 and l != mplStart:
-            if l == '\n' or commentClosePatt.match(l):
+            if l == '\n' or commentClosePatt.match(l) or mplSpacerPatt.match(l):
                 # Skip blank lines after the mode lines.
                 print 'Skipping a useless looking third line'
                 whichLine -= 1
@@ -284,8 +284,6 @@ def fileAnalyzer(args, fname):
                     newFile.write(mplStart)
                 anyErrors = True
                 print 'Third line is not MPL proper start'
-            elif mplSpacerPatt.match(l):
-                print 'Removing MPL spacer'
             else:
                 print '\n\nERROR!!!!'
                 print 'Third line of', fname, 'is weird:', l[:-1]
