@@ -73,7 +73,7 @@ def fileAnalyzer(args, fname):
                     newFile.write(mplStart)
                 whichLine += 2
             else:
-                print 'ERROR!!!!\n\n\n'
+                print '\n\nERROR!!!!'
                 print 'First line of', fname, 'does not match mode line:', l[:-1]
                 exit(-1)
 
@@ -92,7 +92,7 @@ def fileAnalyzer(args, fname):
             elif l.startswith('/* vim:') or l.startswith('// vim:'):
                 print 'Second line is weird vim mode line:', l[:-1]
             else:
-                print 'ERROR!!!!\n\n\n'
+                print '\n\nERROR!!!!'
                 print 'Second line of', fname, 'does not match:', l[:-1]
                 exit(-1)
 
@@ -103,7 +103,7 @@ def fileAnalyzer(args, fname):
                 anyErrors = True
                 print 'Third line is not MPL proper start'
             else:
-                print 'ERROR!!!!\n\n\n'
+                print '\n\nERROR!!!!'
                 print 'Third line of', fname, 'is weird:', l[:-1]
                 exit(-1)
 
