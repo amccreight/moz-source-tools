@@ -111,7 +111,6 @@ def fileAnalyzer(args, fname):
             newFile.write(l)
 
 
-
         # Analyze indentation
         if commentyLinePatt.match(l):
             # Lines that start with * are probably comments, so ignore them.
@@ -170,6 +169,7 @@ def fileInBlackList(fileName):
     return False
 
 
+
 parser = argparse.ArgumentParser(description='Analyze mode lines.')
 parser.add_argument('directory', metavar='D',
                     help='Full path of directory to open files from')
@@ -179,17 +179,16 @@ parser.add_argument('--fix', dest='fixFiles', action='store_true',
 
 args = parser.parse_args()
 
-base = args.directory
+for (base, _, files) in os.walk(args.directory):
+    for fileName in files:
+        if not (fileName.endswith('.h') or fileName.endswith('.cpp')):
+            continue
 
-for fileName in os.listdir(base):
-    if not (fileName.endswith('.h') or fileName.endswith('.cpp')):
-        continue
+        fileName = base + '/' + fileName
 
-    fileName = base + fileName
+        if fileInBlackList(fileName):
+            print 'Skipping file', fileName, 'due to blacklist'
+            print
+            continue
 
-    if fileInBlackList(fileName):
-        print 'Skipping file', fileName, 'due to blacklist'
-        print
-        continue
-
-    fileAnalyzer(args, fileName)
+        fileAnalyzer(args, fileName)
