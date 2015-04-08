@@ -20,7 +20,7 @@ tabPatt = re.compile("^(\t+)")
 firstModeLine = "/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */\n"
 secondModeLine = "/* vim: set ts=8 sts=2 et sw=2 tw=80: */\n"
 
-firstModeLinePatt = re.compile("^/\* -\*-\s+Mode: (?:C|C\+\+|c\+\+|IDL); (?:tab-width|c-basic-offset): \d+; indent-tabs-mode: nil; (?:tab-width|c-basic-offset): \d+;? -\*-\s*(.*)$")
+firstModeLinePatt = re.compile("^\s*/\* -\*-\s+Mode: (?:C|C\+\+|c\+\+|IDL); (?:tab-width|c-basic-offset): \d+; indent-tabs-mode: nil; (?:tab-width|c-basic-offset): \d+;? -\*-\s*(.*)$")
 
 mplStart = "/* This Source Code Form is subject to the terms of the Mozilla Public\n"
 mplOtherStart = " * This Source Code Form is subject to the terms of the Mozilla Public\n"
@@ -78,14 +78,26 @@ fileBlackList = [
     'dom/base/nsViewportInfo.h',
     'dom/base/TreeWalker.cpp',
     'dom/base/TreeWalker.h',
+    'dom/ipc/ContentChild.cpp',
+    'dom/ipc/ContentChild.h',
+    'dom/ipc/ContentParent.cpp',
+    'dom/ipc/ContentParent.h',
+    'dom/ipc/CrashReporterParent.cpp',
+    'dom/ipc/TabParent.h',
+    'dom/jsurl/nsJSProtocolHandler.cpp',
+    'dom/jsurl/nsJSProtocolHandler.h',
+    'dom/media/fmp4/apple/VideoToolbox/VideoToolbox.h',
   ]
 
 # Don't complain about apparently invalid indentation for these files.
+# Mostly these are files that have a bunch of declarations or methods
+# with short bodies.
 indentWhiteList = [
-    # Mostly function decls, so there are few normal lines.
     'xpcom/io/nsStreamUtils.h',
     'xpcom/string/nsReadableUtils.h',
     'xpcom/build/nsXULAppAPI.h',
+    'xpcom/tests/gtest/TestThreads.cpp',
+    'xpcom/tests/gtest/TestUTF.cpp',
     'dom/base/FeedWriterEnabled.h',
     'dom/base/NodeInfoInlines.h',
     'dom/base/nsContentCID.h',
@@ -95,9 +107,23 @@ indentWhiteList = [
     'dom/base/SubtleCrypto.cpp',
     'bluedroid/BluetoothDaemonAvrcpInterface.h',
     'bluedroid/BluetoothDaemonHandsfreeInterface.h',
-    # Formatting is a little weird, but looks 2-space indented to me.
-    'xpcom/tests/gtest/TestThreads.cpp',
-    'xpcom/tests/gtest/TestUTF.cpp',
+    'dom/cellbroadcast/CellBroadcast.cpp',
+    'dom/cellbroadcast/ipc/CellBroadcastParent.cpp',
+    'dom/events/DeviceMotionEvent.cpp',
+    'dom/events/DragEvent.cpp',
+    'dom/events/DragEvent.h',
+    'dom/events/MouseScrollEvent.cpp',
+    'dom/events/SimpleGestureEvent.cpp',
+    'dom/geolocation/nsGeoPositionIPCSerialiser.h',
+    'dom/html/HTMLFrameElement.cpp',
+    'dom/indexedDB/IDBIndex.cpp',
+    'dom/ipc/AppProcessChecker.h',
+    'dom/ipc/ContentBridgeChild.cpp',
+    'dom/ipc/ContentBridgeChild.h',
+    'dom/ipc/ContentBridgeParent.cpp',
+    'dom/ipc/TabChild.h',
+    'dom/media/TrackUnionStream.h',
+    'dom/media/fmp4/BlankDecoderModule.cpp',
   ]
 
 
@@ -190,6 +216,11 @@ def fileAnalyzer(args, fname):
                 exit(-1)
 
         elif whichLine == 2 and l != secondModeLine:
+            if l == "\n":
+                # Skip blank lines after the Emacs mode line.
+                whichLine -= 1
+                continue
+
             if args.fixFiles:
                 newFile.write(secondModeLine)
 
@@ -209,6 +240,12 @@ def fileAnalyzer(args, fname):
                 exit(-1)
 
         elif whichLine == 3 and l != mplStart:
+            if l == '\n' or l == ' */\n':
+                # Skip blank lines after the mode lines.
+                print 'Skipping a useless looking third line'
+                whichLine -= 1
+                continue
+
             if l == mplOtherStart:
                 if args.fixFiles:
                     newFile.write(mplStart)
