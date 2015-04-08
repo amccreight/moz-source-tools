@@ -20,23 +20,25 @@ tabPatt = re.compile("^(\t+)")
 firstModeLine = "/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */\n"
 secondModeLine = "/* vim: set ts=8 sts=2 et sw=2 tw=80: */\n"
 
-firstModeLinePatt = re.compile("^/\* -\*-\s+Mode: C\+*; tab-width: (\d+); indent-tabs-mode: nil; c-basic-offset: (\d+);? -\*-(.*)$")
+firstModeLinePatt = re.compile("^/\* -\*-\s+Mode: (?:C|C\+\+|c\+\+|IDL); (?:tab-width|c-basic-offset): \d+; indent-tabs-mode: nil; (?:tab-width|c-basic-offset): \d+;? -\*-\s*(.*)$")
 
 mplStart = "/* This Source Code Form is subject to the terms of the Mozilla Public\n"
 mplOtherStart = " * This Source Code Form is subject to the terms of the Mozilla Public\n"
 mplSecond = " * License, v. 2.0. If a copy of the MPL was not distributed with this\n"
-mplSpacer = " *\n"
+mplSpacerPatt = re.compile("^\s+\*\s*$")
 
 
 # Don't try to fix files in these directories, which have a lot of
 # files with 4-space indent.
 dirBlackList = [
-    'xpcom/tests',
-    'xpcom/tests/static-checker',
-    'xpcom/tests/windows',
-    'xpcom/typelib/xpt',
-    'xpcom/typelib/xpt/tests',
-    'xpcom/tests',
+    'xpcom/tests/',
+    'xpcom/tests/static-checker/',
+    'xpcom/tests/windows/',
+    'xpcom/typelib/xpt/',
+    'xpcom/typelib/xpt/tests/',
+    'xpcom/tests/',
+    'dom/camera/',
+    'dom/canvas/',
   ]
 
 # Don't try to fix these files.
@@ -47,8 +49,14 @@ fileBlackList = [
     'xpcom/base/pure.h',
     'xpcom/build/mach_override.h',
     'xpcom/glue/nsQuickSort.cpp',
-    # Public domain instead of MPL.
+    'bluedroid/b2g_bdroid_buildcfg.h',
+    # Some other license besides MPL.
     'xpcom/glue/tests/gtest/TestFileUtils.cpp',
+    'bluedroid/BluetoothServiceBluedroid.cpp',
+    'bluez/BluetoothDBusService.cpp',
+    'bluez/BluetoothUnixSocketConnector.cpp',
+    'dom/canvas/MurmurHash3.cpp',
+    'dom/canvas/MurmurHash3.h',
     # Odd tiny header.
     'xpcom/io/crc32c.h',
     # Partially or fully 4-space indented.
@@ -58,6 +66,18 @@ fileBlackList = [
     'xpcom/base/nsAgg.h',
     'xpcom/components/ModuleUtils.h',
     'xpcom/windbgdlg/windbgdlg.cpp',
+    'dom/base/NodeIterator.cpp',
+    'dom/base/NodeIterator.h',
+    'dom/base/nsContentPolicy.cpp',
+    'dom/base/nsContentPolicy.h',
+    'dom/base/nsContentPolicyUtils.h',
+    'dom/base/nsCopySupport.h',
+    'dom/base/nsSyncLoadService.cpp',
+    'dom/base/nsTraversal.cpp',
+    'dom/base/nsTreeSanitizer.h',
+    'dom/base/nsViewportInfo.h',
+    'dom/base/TreeWalker.cpp',
+    'dom/base/TreeWalker.h',
   ]
 
 # Don't complain about apparently invalid indentation for these files.
@@ -66,6 +86,15 @@ indentWhiteList = [
     'xpcom/io/nsStreamUtils.h',
     'xpcom/string/nsReadableUtils.h',
     'xpcom/build/nsXULAppAPI.h',
+    'dom/base/FeedWriterEnabled.h',
+    'dom/base/NodeInfoInlines.h',
+    'dom/base/nsContentCID.h',
+    'dom/base/nsIDocumentObserver.h',
+    'dom/base/nsIMutationObserver.h',
+    'dom/base/nsObjectLoadingContent.h',
+    'dom/base/SubtleCrypto.cpp',
+    'bluedroid/BluetoothDaemonAvrcpInterface.h',
+    'bluedroid/BluetoothDaemonHandsfreeInterface.h',
     # Formatting is a little weird, but looks 2-space indented to me.
     'xpcom/tests/gtest/TestThreads.cpp',
     'xpcom/tests/gtest/TestUTF.cpp',
@@ -89,7 +118,7 @@ def fileInBlackList(base, fileName):
     if dirBlackListPatt.match(base):
         return True
 
-    if fileBlackListPatt.match(base + '/' + fileName):
+    if fileBlackListPatt.match(base + fileName):
         return True
 
     return False
@@ -123,16 +152,22 @@ def fileAnalyzer(args, fname):
 
         # If we're at the start of a file, see if it has the proper modeline.
         if whichLine == 1 and l != firstModeLine:
+            if l == "\n":
+                # Skip leading blank lines.
+                whichLine -= 1
+                continue
+
             if args.fixFiles:
                 newFile.write(firstModeLine)
 
             anyErrors = True
             fmlp = firstModeLinePatt.match(l)
             if fmlp:
-                print 'First line of', fname, 'had tab-width', fmlp.group(1), 'and c-basic-offset', fmlp.group(2)
+                print 'First line of', fname, 'had incorrect C++ mode line'
 
-                if fmlp.group(3) != " */" and fmlp.group(3) != "":
-                    print 'Weird ending for first mode line:', fmlp.group(3)
+                if fmlp.group(1) != "*/" and fmlp.group(1) != "":
+                    print '\n\nERROR!!!!'
+                    print 'Weird ending for first mode line:', fmlp.group(1),
                     exit(-1)
             elif l == mplStart:
                 print 'First line of', fname, 'is MPL instead of Emacs modeline'
@@ -164,7 +199,7 @@ def fileAnalyzer(args, fname):
                 if args.fixFiles:
                     newFile.write(mplStart)
                 whichLine += 1
-            elif l == mplSpacer:
+            elif mplSpacerPatt.match(l):
                 print 'Replacing MPL spacer with vim mode line.'
             elif vimishLine(l):
                 print 'Second line is weird vim mode line:', l[:-1]
@@ -179,6 +214,8 @@ def fileAnalyzer(args, fname):
                     newFile.write(mplStart)
                 anyErrors = True
                 print 'Third line is not MPL proper start'
+            elif mplSpacerPatt.match(l):
+                print 'Removing MPL spacer'
             else:
                 print '\n\nERROR!!!!'
                 print 'Third line of', fname, 'is weird:', l[:-1]
@@ -262,7 +299,9 @@ for (base, _, files) in os.walk(args.directory):
         if not (fileName.endswith('.h') or fileName.endswith('.cpp')):
             continue
 
-        fullFileName = base + '/' + fileName
+        if not base.endswith("/"):
+            base += "/"
+        fullFileName = base + fileName
 
         if fileInBlackList(base, fileName):
             print 'Skipping file', fullFileName, 'due to blacklist'
