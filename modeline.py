@@ -36,6 +36,9 @@ fileBlackList = [
   ]
 
 
+def vimishLine(l):
+    return l.startswith('/* vim:') or l.startswith('// vim:')
+
 def fileAnalyzer(args, fname):
     f = open(fname, "r")
 
@@ -73,6 +76,15 @@ def fileAnalyzer(args, fname):
                     newFile.write(secondModeLine)
                     newFile.write(mplStart)
                 whichLine += 2
+            elif vimishLine(l):
+                if l == secondModeLine:
+                    print 'First line of', fname, 'is vim modeline'
+                else:
+                    print 'First line of', fname, 'is nonstandard vim modeline'
+
+                if args.fixFiles:
+                    newFile.write(secondModeLine)
+                whichLine += 1
             else:
                 print '\n\nERROR!!!!'
                 print 'First line of', fname, 'does not match mode line:', l[:-1]
@@ -90,7 +102,7 @@ def fileAnalyzer(args, fname):
                 whichLine += 1
             elif l == mplSpacer:
                 print 'Replacing MPL spacer with vim mode line.'
-            elif l.startswith('/* vim:') or l.startswith('// vim:'):
+            elif vimishLine(l):
                 print 'Second line is weird vim mode line:', l[:-1]
             else:
                 print '\n\nERROR!!!!'
