@@ -22,11 +22,20 @@ secondModeLine = "/* vim: set ts=8 sts=2 et sw=2 tw=80: */\n"
 
 firstModeLinePatt = re.compile("^\s*/\* -\*-\s+Mode: (?:C|C\+\+|c\+\+|IDL); (?:tab-width|c-basic-offset): \d+; indent-tabs-mode: nil; (?:tab-width|c-basic-offset): \d+;? -\*-\s*(.*)$")
 
+commentClosePatt = re.compile("^\s*\*/\n")
+
 mplStart = "/* This Source Code Form is subject to the terms of the Mozilla Public\n"
 mplOtherStart = " * This Source Code Form is subject to the terms of the Mozilla Public\n"
 mplSecond = " * License, v. 2.0. If a copy of the MPL was not distributed with this\n"
 mplSpacerPatt = re.compile("^\s+\*\s*$")
 
+
+# Skip files that have these anywhere in their path.
+wideDirBlackList = [
+    'xpcom/reflect', # This dir seems all 4-space indented.
+    'dom/media/', # There's a lot of this, and lots is imported.
+    'dom/plugins/',
+  ]
 
 # Don't try to fix files in these directories, which have a lot of
 # files with 4-space indent.
@@ -124,6 +133,10 @@ indentWhiteList = [
     'dom/mobileconnection/ipc/MobileConnectionIPCSerializer.h',
     'dom/mobilemessage/MmsMessage.h',
     'dom/mobilemessage/MobileMessageService.cpp',
+    'dom/mobilemessage/SmsMessage.h',
+    'dom/network/NetUtils.h',
+    'dom/quota/StorageMatcher.h',
+    'dom/security/nsCSPContext.h',
   ]
 
 
@@ -131,18 +144,15 @@ def patternifyList(l):
     return re.compile("^.*(?:{core})$".format(core = "|".join([re.escape(s) for s in l])))
 
 
+wideDirBlackList = re.compile("^.*(?:{core}).*$".format(core = "|".join([re.escape(s) for s in wideDirBlackList])))
+
 dirBlackListPatt = patternifyList(dirBlackList)
 fileBlackListPatt = patternifyList(fileBlackList)
 indentWhiteListPatt = patternifyList(indentWhiteList)
 
 
 def fileInBlackList(base, fileName):
-    # This directory seems to be all 4-space indented.
-    if 'xpcom/reflect' in base:
-        return True
-
-    # This is a whole big can of worms, so skip it for now.
-    if 'dom/media/' in base:
+    if wideDirBlackList.match(base):
         return True
 
     if dirBlackListPatt.match(base):
@@ -244,7 +254,7 @@ def fileAnalyzer(args, fname):
                 exit(-1)
 
         elif whichLine == 3 and l != mplStart:
-            if l == '\n' or l == ' */\n':
+            if l == '\n' or commentClosePatt.match(l):
                 # Skip blank lines after the mode lines.
                 print 'Skipping a useless looking third line'
                 whichLine -= 1
