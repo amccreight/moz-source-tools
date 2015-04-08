@@ -52,48 +52,69 @@ def fileAnalyzer(fname):
     whichLine = 0
 
     anyErrors = False
-    openMPLComment = False
 
     for l in f:
         whichLine += 1
 
         # If we're at the start of a file, see if it has the proper modeline.
         if whichLine == 1 and l != firstModeLine:
+            if fixFiles:
+                newFile.write(firstModeLine)
+
             anyErrors = True
             fmlp = firstModeLinePatt.match(l)
             if fmlp:
-                print 'First line of', fname, 'does not quite match mode line:', fmlp.group(1), fmlp.group(2)
+                print 'First line of', fname, 'had tab-width', fmlp.group(1), 'and c-basic-offset', fmlp.group(2)
 
-                if fmlp.group(3) != " */":
-                    if fmlp.group(3) == "":
-                        # Need to open the comment on the MPL line.
-                        openMPLComment = True
-                    else:
-                        print 'Weird ending for first mode line:', fmlp.group(3)
-                        exit(-1)
+                if fmlp.group(3) != " */" and fmlp.group(3) != "":
+                    print 'Weird ending for first mode line:', fmlp.group(3)
+                    exit(-1)
             elif l == mplStart:
-                print 'First line is MPL instead of VIM modeline'
+                print 'First line of', fname, 'is MPL instead of Emacs modeline'
+                if fixFiles:
+                    newFile.write(secondModeLine)
+                    newFile.write(mplStart)
+                whichLine += 2
             else:
                 print 'ERROR!!!!\n\n\n'
                 print 'First line of', fname, 'does not match mode line:', l[:-1]
                 exit(-1)
 
-        if whichLine == 2 and l != secondModeLine:
+        elif whichLine == 2 and l != secondModeLine:
+            if fixFiles:
+                newFile.write(secondModeLine)
+
             anyErrors = True
-            if l == mplStart:
+            if l == mplStart or l == mplOtherStart:
                 print 'Second line is MPL instead of VIM modeline'
-            elif l == mplOtherStart:
-                print 'Second line is alt form of MPL instead of VIM modeline'
-            elif l == mplSecond:
-                print 'Second line is second line of MPL instead of VIM modeline'
+                if fixFiles:
+                    newFile.write(mplStart)
+                whichLine += 1
             elif l == mplSpacer:
                 print 'Second line is MPL spacer'
+                whichLine -= 1
             elif l.startswith('/* vim:'):
                 print 'Second line is weird vim mode line:', l[:-1]
             else:
                 print 'ERROR!!!!\n\n\n'
                 print 'Second line of', fname, 'does not match:', l[:-1]
                 exit(-1)
+
+        elif whichLine == 3 and l != mplStart:
+            if l == mplOtherStart:
+                if fixFiles:
+                    newFile.write(mplStart)
+                anyErrors = True
+                print 'Third line is not MPL proper start'
+            else:
+                print 'ERROR!!!!\n\n\n'
+                print 'Third line of', fname, 'is weird:', l[:-1]
+                exit(-1)
+
+        elif fixFiles:
+            newFile.write(l)
+
+
 
         # Analyze indentation
         if commentyLinePatt.match(l):
