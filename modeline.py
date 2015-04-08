@@ -32,6 +32,7 @@ mplSpacer = " *\n"
 fileBlackList = [
     'xpcom/base/ErrorList.h', # This file is weird, don't bother with it.
     'xpcom/base/pure.h', # Purify header?!?!
+    'xpcom/build/mach_override.h', # Some imported system-y header
   ]
 
 
