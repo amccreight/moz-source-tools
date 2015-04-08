@@ -40,13 +40,24 @@ fileBlackList = [
 
 # Don't complain about apparently invalid indentation for these files.
 indentWhiteList = [
-    'xpcom/io/nsStreamUtils.h', # Mostly function decls, so few normal lines.
+    # Mostly function decls, so there are few normal lines.
+    'xpcom/io/nsStreamUtils.h',
+    'xpcom/string/nsReadableUtils.h',
   ]
 
 
-def fileInBlackList(fileName):
+def fileInBlackList(base, fileName):
+    # This directory seems to be all 4-space indented.
+    if 'xpcom/reflect' in base:
+        return True
+
+    # This directory is kind of a mess.
+    if base.endswith('xpcom/tests'):
+        return True
+
+    fullFileName = base + '/' + fileName
     for f in fileBlackList:
-        if fileName.endswith(f):
+        if fullFileName.endswith(f):
             return True
     return False
 
@@ -58,7 +69,7 @@ def fileInIndentWhiteList(fileName):
 
 
 def vimishLine(l):
-    return l.startswith('/* vim:') or l.startswith('// vim:')
+    return l.startswith('/* vim:') or l.startswith('// vim:') or l.startswith(' * vim:')
 
 def fileAnalyzer(args, fname):
     f = open(fname, "r")
@@ -220,11 +231,11 @@ for (base, _, files) in os.walk(args.directory):
         if not (fileName.endswith('.h') or fileName.endswith('.cpp')):
             continue
 
-        fileName = base + '/' + fileName
+        fullFileName = base + '/' + fileName
 
-        if fileInBlackList(fileName):
-            print 'Skipping file', fileName, 'due to blacklist'
+        if fileInBlackList(base, fileName):
+            print 'Skipping file', fullFileName, 'due to blacklist'
             print
             continue
 
-        fileAnalyzer(args, fileName)
+        fileAnalyzer(args, fullFileName)
