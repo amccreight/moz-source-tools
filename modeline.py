@@ -86,7 +86,6 @@ fileBlackList = [
     'dom/ipc/TabParent.h',
     'dom/jsurl/nsJSProtocolHandler.cpp',
     'dom/jsurl/nsJSProtocolHandler.h',
-    'dom/media/fmp4/apple/VideoToolbox/VideoToolbox.h',
   ]
 
 # Don't complain about apparently invalid indentation for these files.
@@ -122,8 +121,9 @@ indentWhiteList = [
     'dom/ipc/ContentBridgeChild.h',
     'dom/ipc/ContentBridgeParent.cpp',
     'dom/ipc/TabChild.h',
-    'dom/media/TrackUnionStream.h',
-    'dom/media/fmp4/BlankDecoderModule.cpp',
+    'dom/mobileconnection/ipc/MobileConnectionIPCSerializer.h',
+    'dom/mobilemessage/MmsMessage.h',
+    'dom/mobilemessage/MobileMessageService.cpp',
   ]
 
 
@@ -139,6 +139,10 @@ indentWhiteListPatt = patternifyList(indentWhiteList)
 def fileInBlackList(base, fileName):
     # This directory seems to be all 4-space indented.
     if 'xpcom/reflect' in base:
+        return True
+
+    # This is a whole big can of worms, so skip it for now.
+    if 'dom/media/' in base:
         return True
 
     if dirBlackListPatt.match(base):
@@ -303,6 +307,7 @@ def fileAnalyzer(args, fname):
             if fileInIndentWhiteList(fname):
                 probablyIndentedBy = 2
             else:
+                print '\n\nERROR!!!!'
                 print 'File with lots of oddly indented lines', fname
                 print '\tcount0: ', count0
                 print '\tcount2: ', count2
