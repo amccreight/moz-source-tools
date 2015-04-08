@@ -28,12 +28,29 @@ mplSecond = " * License, v. 2.0. If a copy of the MPL was not distributed with t
 mplSpacer = " *\n"
 
 
-
+# Don't try to fix these files.
 fileBlackList = [
     'xpcom/base/ErrorList.h', # This file is weird, don't bother with it.
     'xpcom/base/pure.h', # Purify header?!?!
     'xpcom/build/mach_override.h', # Some imported system-y header
   ]
+
+# Don't complain about apparently invalid indentation for these files.
+indentWhiteList = [
+    'xpcom/build/ServiceList.h',
+  ]
+
+def fileInBlackList(fileName):
+    for f in fileBlackList:
+        if fileName.endswith(f):
+            return True
+    return False
+
+def fileInIndentWhiteList(fileName):
+    for f in indentWhiteList:
+        if fileName.endswith(f):
+            return True
+    return False
 
 
 def vimishLine(l):
@@ -170,17 +187,16 @@ def fileAnalyzer(args, fname):
             print '\tcountOther: ', countOther
             assert False
 
-    if probablyIndentedBy != 2:
+    if probablyIndentedBy != 2 and not fileInIndentWhiteList(fname):
+        print 'Weird file', fname
+        print '\tcount0: ', count0
+        print '\tcount2: ', count2
+        print '\tcount4: ', count4
+        print '\tcountOther: ', countOther
+
+        print '\n\nERROR!!!!'
         print 'File', fname, 'was probably indented by', probablyIndentedBy, 'instead of by 2'
         exit(-1)
-
-
-def fileInBlackList(fileName):
-    for f in fileBlackList:
-        if fileName.endswith(f):
-            return True
-    return False
-
 
 
 parser = argparse.ArgumentParser(description='Analyze mode lines.')
