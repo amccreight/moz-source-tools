@@ -215,12 +215,11 @@ def fileAnalyzer(args, fname):
         # This file doesn't have many indented lines, so just assume it is okay.
         probablyIndentedBy = 2
     else:
-        if count2 > (count2 + count4 + countOther) / 2:
+        if count2 > (count2 + count4 + countOther) * 0.6:
             probablyIndentedBy = 2
-        if count4 > (count2 + count4 + countOther) / 2:
-            assert count2 <= (count2 + count4 + countOther) / 2
+        elif count4 > (count4 + countOther) * 0.6:
             probablyIndentedBy = 4
-        if countOther > (count2 + count4 + countOther) / 2:
+        elif countOther > (count2 + count4 + countOther) / 2:
             if fileInIndentWhiteList(fname):
                 probablyIndentedBy = 2
             else:
