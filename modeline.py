@@ -36,9 +36,8 @@ dirBlackList = [
     'xpcom/tests/windows',
     'xpcom/typelib/xpt',
     'xpcom/typelib/xpt/tests',
+    'xpcom/tests',
   ]
-
-dirBlackListPatt = re.compile("%s$".format("|".join(dirBlackList)))
 
 # Don't try to fix these files.
 fileBlackList = [
@@ -55,9 +54,10 @@ fileBlackList = [
     # Partially or fully 4-space indented.
     'xpcom/tests/gtest/TestSynchronization.cpp',
     'xpcom/tests/gtest/TestTimeStamp.cpp',
+    'xpcom/tests/gtest/TestXPIDLString.cpp', # Also missing license header.
     'xpcom/base/nsAgg.h',
     'xpcom/components/ModuleUtils.h',
-    'xpcom/tests/gtest/TestXPIDLString.cpp', # Also missing license header.
+    'xpcom/windbgdlg/windbgdlg.cpp',
   ]
 
 # Don't complain about apparently invalid indentation for these files.
@@ -72,25 +72,31 @@ indentWhiteList = [
   ]
 
 
+def patternifyList(l):
+    return re.compile("^.*(?:{core})$".format(core = "|".join([re.escape(s) for s in l])))
+
+
+dirBlackListPatt = patternifyList(dirBlackList)
+fileBlackListPatt = patternifyList(fileBlackList)
+indentWhiteListPatt = patternifyList(indentWhiteList)
+
+
 def fileInBlackList(base, fileName):
     # This directory seems to be all 4-space indented.
     if 'xpcom/reflect' in base:
         return True
 
-    dblm = dirBlackListPatt.match(base)
-    if dblm:
+    if dirBlackListPatt.match(base):
         return True
 
-    fullFileName = base + '/' + fileName
-    for f in fileBlackList:
-        if fullFileName.endswith(f):
-            return True
+    if fileBlackListPatt.match(base + '/' + fileName):
+        return True
+
     return False
 
 def fileInIndentWhiteList(fileName):
-    for f in indentWhiteList:
-        if fileName.endswith(f):
-            return True
+    if indentWhiteListPatt.match(fileName):
+        return True
     return False
 
 
