@@ -20,7 +20,7 @@ tabPatt = re.compile("^(\t+)")
 firstModeLine = "/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */\n"
 secondModeLine = "/* vim: set ts=8 sts=2 et sw=2 tw=80: */\n"
 
-firstModeLinePatt = re.compile("^/\* -\*- Mode: C\+\+; tab-width: (\d+); indent-tabs-mode: nil; c-basic-offset: (\d+) -\*-(.*)$")
+firstModeLinePatt = re.compile("^/\* -\*-\s+Mode: C\+\+; tab-width: (\d+); indent-tabs-mode: nil; c-basic-offset: (\d+);? -\*-(.*)$")
 
 mplStart = "/* This Source Code Form is subject to the terms of the Mozilla Public\n"
 mplOtherStart = " * This Source Code Form is subject to the terms of the Mozilla Public\n"
