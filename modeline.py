@@ -13,7 +13,7 @@ import argparse
 
 commentyLinePatt = re.compile("^\s*\*")
 wsPatt = re.compile("^([ ]+)")
-tabPatt = re.compile("^(\t+)")
+fullWhitespacePatt = re.compile("^(\s+)")
 
 
 # from https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Coding_Style#Mode_Line
@@ -114,6 +114,7 @@ indentWhiteList = [
     'xpcom/io/nsStreamUtils.h',
     'xpcom/string/nsReadableUtils.h',
     'xpcom/build/nsXULAppAPI.h',
+    'xpcom/build/ServiceList.h',
     'xpcom/tests/gtest/TestThreads.cpp',
     'xpcom/tests/gtest/TestUTF.cpp',
     'dom/base/FeedWriterEnabled.h',
@@ -199,6 +200,7 @@ def fileAnalyzer(args, fname):
     count2 = 0
     count4 = 0
     countOther = 0
+    tabCount = 0
 
     whichLine = 0
 
@@ -206,6 +208,11 @@ def fileAnalyzer(args, fname):
 
     for l in f:
         whichLine += 1
+
+        if args.tabs:
+            fwp = fullWhitespacePatt.match(l)
+            if fwp and fwp.group(1).count("\t") != 0:
+                tabCount += 1
 
         # If we're at the start of a file, see if it has the proper modeline.
         if whichLine == 1 and l != firstModeLine:
@@ -293,7 +300,7 @@ def fileAnalyzer(args, fname):
             newFile.write(l)
 
 
-        # Analyze indentation
+        # Analyze indentation.
         if commentyLinePatt.match(l):
             # Lines that start with * are probably comments, so ignore them.
             continue
@@ -311,6 +318,7 @@ def fileAnalyzer(args, fname):
         elif indent % 2 != 0:
             countOther += 1
 
+
     f.close()
 
     if args.fixFiles:
@@ -319,6 +327,9 @@ def fileAnalyzer(args, fname):
 
     if anyErrors:
         print
+
+    if tabCount != 0:
+        print 'TABS in file', fname, 'on', tabCount, 'lines.'
 
     # Check that this file is probably indented by 2.
     probablyIndentedBy = -1
@@ -360,6 +371,9 @@ parser.add_argument('directory', metavar='D',
 
 parser.add_argument('--fix', dest='fixFiles', action='store_true',
                     help='Fix any errors that are found')
+
+parser.add_argument('--tabs', dest='tabs', action='store_true',
+                    help='Analyze leading tabs')
 
 args = parser.parse_args()
 
