@@ -30,6 +30,7 @@ mplOtherStart = " * This Source Code Form is subject to the terms of the Mozilla
 mplSecond = " * License, v. 2.0. If a copy of the MPL was not distributed with this\n"
 mplSpacerPatt = re.compile("^\s+\*\s*$")
 
+chromiumLicensePatt = re.compile("// Copyright(?: \(c\))? 2[0-9]{3}(?:\-2[0-9]{3})? (?:The Chromium Authors|the V8 project authors). All rights reserved.\n")
 
 # Skip files that have these anywhere in their path.
 wideDirBlackList = [
@@ -38,6 +39,7 @@ wideDirBlackList = [
     'dom/plugins/',
     'dom/xslt/',
     'dom/xul/',
+    'ipc/chromium/src/third_party/libevent/',
   ]
 
 # Don't try to fix files in these directories, which have a lot of
@@ -151,6 +153,11 @@ indentWhiteList = [
     'dom/telephony/TelephonyCallInfo.cpp',
     'dom/telephony/ipc/TelephonyIPCSerializer.h',
     'dom/tv/FakeTVService.h',
+    'ipc/chromium/src/base/atomicops_internals_mips_gcc.h',
+    'ipc/chromium/src/base/thread_local_storage.h',
+    'ipc/chromium/src/base/tuple.h',
+    'ipc/chromium/src/chrome/common/notification_type.h',
+    'ipc/chromium/src/chrome/common/result_codes.h',
   ]
 
 
@@ -237,6 +244,12 @@ def fileAnalyzer(args, fname):
                     newFile.write(secondModeLine)
                     newFile.write(mplStart)
                 whichLine += 2
+            elif chromiumLicensePatt.match(l):
+                print 'First line of', fname, 'is Chromium license instead of Emacs modeline'
+                if args.fixFiles:
+                    newFile.write(secondModeLine)
+                    newFile.write(l)
+                whichLine += 2
             elif vimishLine(l):
                 if l == secondModeLine:
                     print 'First line of', fname, 'is vim modeline'
@@ -266,6 +279,11 @@ def fileAnalyzer(args, fname):
                 if args.fixFiles:
                     newFile.write(mplStart)
                 whichLine += 1
+            elif chromiumLicensePatt.match(l):
+                print 'Second line is Chromium license instead of VIM modeline'
+                if args.fixFiles:
+                    newFile.write(l)
+                whichLine += 1
             elif mplSpacerPatt.match(l):
                 print 'Replacing MPL spacer with vim mode line.'
             elif vimishLine(l):
@@ -275,7 +293,7 @@ def fileAnalyzer(args, fname):
                 print 'Second line of', fname, 'does not match:', l[:-1]
                 exit(-1)
 
-        elif whichLine == 3 and l != mplStart:
+        elif whichLine == 3 and (l != mplStart or not chromiumLicensePatt.match(l)):
             if l == '\n' or commentClosePatt.match(l) or mplSpacerPatt.match(l):
                 # Skip blank lines after the mode lines.
                 print 'Skipping a useless looking third line'
@@ -375,7 +393,7 @@ args = parser.parse_args()
 
 for (base, _, files) in os.walk(args.directory):
     for fileName in files:
-        if not (fileName.endswith('.h') or fileName.endswith('.cpp')):
+        if not (fileName.endswith('.h') or fileName.endswith('.cpp')) or fileName.endswith('.cc'):
             continue
 
         if not base.endswith("/"):
