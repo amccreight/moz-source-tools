@@ -293,7 +293,7 @@ def fileAnalyzer(args, fname):
                 print 'Second line of', fname, 'does not match:', l[:-1]
                 exit(-1)
 
-        elif whichLine == 3 and (l != mplStart or not chromiumLicensePatt.match(l)):
+        elif whichLine == 3 and l != mplStart and not chromiumLicensePatt.match(l):
             if l == '\n' or commentClosePatt.match(l) or mplSpacerPatt.match(l):
                 # Skip blank lines after the mode lines.
                 print 'Skipping a useless looking third line'
@@ -393,7 +393,7 @@ args = parser.parse_args()
 
 for (base, _, files) in os.walk(args.directory):
     for fileName in files:
-        if not (fileName.endswith('.h') or fileName.endswith('.cpp')) or fileName.endswith('.cc'):
+        if not (fileName.endswith('.h') or fileName.endswith('.cpp') or fileName.endswith('.cc')):
             continue
 
         if not base.endswith("/"):
