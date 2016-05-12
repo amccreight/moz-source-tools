@@ -20,7 +20,7 @@ fullWhitespacePatt = re.compile("^(\s+)")
 firstModeLine = "/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */\n"
 secondModeLine = "/* vim: set ts=8 sts=2 et sw=2 tw=80: */\n"
 
-firstModeLinePatt = re.compile("^\s*/\* (?:-|a)\*-\s+Mode: (?:C|C\+\+|c\+\+|IDL);? (?:tab-width|c-basic-offset): \d+; indent-tabs-mode: nil; (?:tab-width|c-basic-offset): \d+;? -\*-\s*(.*)$")
+firstModeLinePatt = re.compile("^\s*//?\* (?:-|a)\*-\s+Mode: (?:C|C\+\+|c\+\+|IDL);? (?:tab-width|c-basic-offset): \d+; indent-tabs-mode: nil; (?:tab-width|c-basic-offset): \d+;? -\*-\s*(.*)$")
 # For some reason, many SVG mode lines start with a*- rather than -*-.
 
 commentClosePatt = re.compile("^\s*\*/\n")
