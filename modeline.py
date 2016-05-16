@@ -49,7 +49,6 @@ dirBlackList = [
     'xpcom/tests/windows/',
     'xpcom/typelib/xpt/',
     'xpcom/typelib/xpt/tests/',
-    'xpcom/tests/',
     'dom/camera/',
     'dom/canvas/',
     'dom/system/qt/',
