@@ -45,10 +45,8 @@ wideDirBlackList = [
 # files with 4-space indent.
 dirBlackList = [
     'xpcom/tests/',
-    'xpcom/tests/static-checker/',
     'xpcom/tests/windows/',
     'xpcom/typelib/xpt/',
-    'xpcom/typelib/xpt/tests/',
     'dom/camera/',
     'dom/canvas/',
     'dom/system/qt/',
