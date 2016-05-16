@@ -27,7 +27,6 @@ commentClosePatt = re.compile("^\s*\*/\n")
 
 mplStart = "/* This Source Code Form is subject to the terms of the Mozilla Public\n"
 mplOtherStart = " * This Source Code Form is subject to the terms of the Mozilla Public\n"
-mplSecond = " * License, v. 2.0. If a copy of the MPL was not distributed with this\n"
 mplSpacerPatt = re.compile("^\s+\*\s*$")
 
 chromiumLicensePatt = re.compile("// Copyright(?: \(c\))? 2[0-9]{3}(?:\-2[0-9]{3})? (?:The Chromium Authors|the V8 project authors). All rights reserved.\n")
