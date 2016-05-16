@@ -77,12 +77,7 @@ fileBlackList = [
     'xpcom/io/crc32c.h',
     # Partially or fully 4-space or tab indented.
     'xpcom/glue/nsQuickSort.cpp',
-    'xpcom/tests/gtest/TestSynchronization.cpp',
-    'xpcom/tests/gtest/TestTimeStamp.cpp',
-    'xpcom/tests/gtest/TestXPIDLString.cpp', # Also missing license header.
     'xpcom/base/nsAgg.h',
-    'xpcom/components/ModuleUtils.h',
-    'xpcom/windbgdlg/windbgdlg.cpp',
     'dom/base/NodeIterator.cpp',
     'dom/base/NodeIterator.h',
     'dom/base/nsContentPolicy.cpp',
