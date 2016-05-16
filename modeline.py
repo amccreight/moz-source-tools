@@ -64,9 +64,7 @@ fileBlackList = [
     'xpcom/base/ErrorList.h',
     'dom/webidl/CSS2PropertiesProps.h',
     # Imported.
-    'xpcom/base/pure.h',
     'xpcom/build/mach_override.h',
-    'xpcom/glue/nsQuickSort.cpp',
     'bluedroid/b2g_bdroid_buildcfg.h',
     # Some other license besides MPL.
     'xpcom/glue/tests/gtest/TestFileUtils.cpp',
@@ -77,7 +75,8 @@ fileBlackList = [
     'dom/canvas/MurmurHash3.h',
     # Odd tiny header.
     'xpcom/io/crc32c.h',
-    # Partially or fully 4-space indented.
+    # Partially or fully 4-space or tab indented.
+    'xpcom/glue/nsQuickSort.cpp',
     'xpcom/tests/gtest/TestSynchronization.cpp',
     'xpcom/tests/gtest/TestTimeStamp.cpp',
     'xpcom/tests/gtest/TestXPIDLString.cpp', # Also missing license header.
