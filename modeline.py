@@ -91,6 +91,11 @@ fileBlackList = [
     'dom/jsurl/nsJSProtocolHandler.h',
     'dom/xml/nsXMLPrettyPrinter.cpp',
     'dom/xml/nsXMLPrettyPrinter.h',
+    'ipc/glue/MessageChannel.h',
+    'ipc/glue/MessageChannel.cpp',
+    'ipc/glue/MessageLink.h',
+    'ipc/glue/MessageLink.cpp',
+    'ipc/glue/ProtocolUtils.h',
   ]
 
 # Don't complain about apparently invalid indentation for these files.
@@ -148,6 +153,7 @@ indentWhiteList = [
     'ipc/chromium/src/base/tuple.h',
     'ipc/chromium/src/chrome/common/notification_type.h',
     'ipc/chromium/src/chrome/common/result_codes.h',
+    'ipc/glue/Transport_win.h',
   ]
 
 
