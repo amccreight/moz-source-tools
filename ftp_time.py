@@ -47,22 +47,9 @@ def fileAnalyzer(fname):
 
 
 parser = argparse.ArgumentParser(description='Fix FTP unit test times.')
-parser.add_argument('directory', metavar='D',
+parser.add_argument('fileName', metavar='F',
                     help='Full path of directory to open files from')
 
 args = parser.parse_args()
 
-for (base, _, files) in os.walk(args.directory):
-    for fileName in files:
-        if not fileName.endswith('.out'):
-            continue
-
-        # This file uses a very different date format, so skip it.
-        if fileName == "U-WinNT.out":
-            continue
-
-        if not base.endswith("/"):
-            base += "/"
-        fullFileName = base + fileName
-
-        fileAnalyzer(fullFileName)
+fileAnalyzer(args.fileName)
