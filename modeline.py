@@ -33,7 +33,8 @@ chromiumLicensePatt = re.compile("// Copyright(?: \(c\))? 2[0-9]{3}(?:\-2[0-9]{3
 
 # Skip files that have these anywhere in their path.
 wideDirBlackList = [
-    'xpcom/reflect', # This dir seems all 4-space indented.
+    'xpcom/reflect/', # This dir seems all 4-space indented.
+    'xpcom/rust/gtest/',
     'dom/media/', # There's a lot of this, and lots is imported.
     'dom/plugins/',
     'dom/xslt/',
@@ -46,6 +47,7 @@ wideDirBlackList = [
 dirBlackList = [
     'xpcom/tests/',
     'xpcom/tests/windows/',
+    'xpcom/tests/gtest/',
     'xpcom/typelib/xpt/',
     'dom/camera/',
     'dom/canvas/',
@@ -73,7 +75,7 @@ fileBlackList = [
     # Odd tiny header.
     'xpcom/io/crc32c.h',
     # Partially or fully 4-space or tab indented.
-    'xpcom/glue/nsQuickSort.cpp',
+    'xpcom/ds/nsQuickSort.cpp',
     'xpcom/base/nsAgg.h',
     'dom/base/NodeIterator.cpp',
     'dom/base/NodeIterator.h',
@@ -105,6 +107,7 @@ indentWhiteList = [
     'xpcom/io/nsStreamUtils.h',
     'xpcom/string/nsReadableUtils.h',
     'xpcom/build/nsXULAppAPI.h',
+    'xpcom/build/nsXPCOM.h',
     'xpcom/build/ServiceList.h',
     'xpcom/tests/gtest/TestThreads.cpp',
     'xpcom/tests/gtest/TestUTF.cpp',
@@ -283,7 +286,7 @@ def fileAnalyzer(args, fname):
             elif mplSpacerPatt.match(l):
                 print 'Replacing MPL spacer with vim mode line.'
             elif vimishLine(l):
-                print 'Second line is weird vim mode line:', l[:-1]
+                print 'Second line of', fname, 'is weird vim mode line:', l[:-1]
             else:
                 print '\n\nERROR!!!!'
                 print 'Second line of', fname, 'does not match:', l[:-1]
@@ -387,7 +390,10 @@ parser.add_argument('--tabs', dest='tabs', action='store_true',
 
 args = parser.parse_args()
 
+blacklist = []
+
 for (base, _, files) in os.walk(args.directory):
+
     for fileName in files:
         if not (fileName.endswith('.h') or fileName.endswith('.cpp') or fileName.endswith('.cc')):
             continue
@@ -397,8 +403,12 @@ for (base, _, files) in os.walk(args.directory):
         fullFileName = base + fileName
 
         if fileInBlackList(base, fileName):
-            print 'Skipping file', fullFileName, 'due to blacklist'
-            print
+            blacklist.append(fullFileName)
             continue
 
         fileAnalyzer(args, fullFileName)
+
+if blacklist:
+    print 'Skipped files due to blacklist:'
+    for f in blacklist:
+        print '   ', f
