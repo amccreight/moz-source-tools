@@ -55,6 +55,8 @@ dirBlackList = [
     # Lots of Apache-style licenses in this directory that aren't dealt with by the script.
     'dom/system/gonk/',
     'dom/system/gonk/android_audio/',
+    'dom/webbrowserpersist/',
+    'dom/webauthn/cbor-cpp/src/',
   ]
 
 # Don't try to fix these files.
@@ -89,8 +91,11 @@ fileBlackList = [
     'dom/base/nsViewportInfo.h',
     'dom/base/TreeWalker.cpp',
     'dom/base/TreeWalker.h',
+    'dom/bindings/nsScriptError.cpp',
+    'dom/bindings/nsScriptErrorWithStack.cpp',
     'dom/jsurl/nsJSProtocolHandler.cpp',
     'dom/jsurl/nsJSProtocolHandler.h',
+    'dom/system/android/AndroidLocationProvider.cpp',
     'dom/xml/nsXMLPrettyPrinter.cpp',
     'dom/xml/nsXMLPrettyPrinter.h',
     'ipc/glue/MessageChannel.h',
@@ -111,6 +116,7 @@ indentWhiteList = [
     'xpcom/build/ServiceList.h',
     'xpcom/tests/gtest/TestThreads.cpp',
     'xpcom/tests/gtest/TestUTF.cpp',
+    'dom/base/ChromeUtils.h',
     'dom/base/FeedWriterEnabled.h',
     'dom/base/NodeInfoInlines.h',
     'dom/base/nsContentCID.h',
@@ -118,6 +124,7 @@ indentWhiteList = [
     'dom/base/nsIMutationObserver.h',
     'dom/base/nsObjectLoadingContent.h',
     'dom/base/SubtleCrypto.cpp',
+    'dom/base/test/gtest/TestParserDialogOptions.cpp',
     'dom/gamepad/GamepadServiceTest.cpp',
     'dom/gamepad/cocoa/CocoaGamepad.cpp',
     'bluedroid/BluetoothDaemonAvrcpInterface.h',
@@ -130,13 +137,22 @@ indentWhiteList = [
     'dom/events/DragEvent.h',
     'dom/events/MouseScrollEvent.cpp',
     'dom/events/SimpleGestureEvent.cpp',
+    'dom/events/MouseEvent.cpp',
+    'dom/events/WheelEvent.cpp',
+    'dom/file/FileCreatorHelper.h',
+    'dom/flyweb/HttpServer.h',
+    'dom/gamepad/GamepadPoseState.h',
+    'dom/gamepad/ipc/GamepadEventChannelChild.cpp',
+    'dom/gamepad/ipc/GamepadMessageUtils.h',
     'dom/geolocation/nsGeoPositionIPCSerialiser.h',
     'dom/html/HTMLFrameElement.cpp',
     'dom/indexedDB/IDBIndex.cpp',
+    'dom/indexedDB/ReportInternalError.h',
     'dom/ipc/AppProcessChecker.h',
     'dom/ipc/ContentBridgeChild.cpp',
     'dom/ipc/ContentBridgeChild.h',
     'dom/ipc/ContentBridgeParent.cpp',
+    'dom/ipc/CoalescedWheelData.cpp',
     'dom/mobileconnection/ipc/MobileConnectionIPCSerializer.h',
     'dom/mobilemessage/MmsMessage.h',
     'dom/mobilemessage/MobileMessageService.cpp',
@@ -146,7 +162,10 @@ indentWhiteList = [
     'dom/security/nsCSPContext.h',
     'dom/security/nsCSPParser.h',
     'dom/security/nsCSPUtils.h',
+    'dom/security/SRICheck.h',
+    'dom/smil/nsSMILCSSProperty.cpp',
     'dom/svg/SVGAnimateTransformElement.cpp',
+    'dom/svg/SVGMotionSMILPathUtils.h',
     'dom/svg/SVGSymbolElement.cpp',
     'dom/telephony/TelephonyCallInfo.cpp',
     'dom/telephony/ipc/TelephonyIPCSerializer.h',
@@ -233,7 +252,7 @@ def fileAnalyzer(args, fname):
 
                 if fmlp.group(1) != "*/" and fmlp.group(1) != "":
                     print '\n\nERROR!!!!'
-                    print 'Weird ending for first mode line:', fmlp.group(1),
+                    print 'Weird ending in', fname, 'for first mode line:', fmlp.group(1),
                     exit(-1)
             elif l == '/* -*- Mode: c++; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-\n':
                 print 'First line of', fname, 'had dom/system/android/ style modeline'
