@@ -39,6 +39,7 @@ wideDirBlackList = [
     'dom/plugins/',
     'dom/xslt/',
     'dom/xul/',
+    'embedding/ios/',
     'ipc/chromium/src/third_party/libevent/',
   ]
 
@@ -116,6 +117,7 @@ indentWhiteList = [
     'xpcom/build/ServiceList.h',
     'xpcom/tests/gtest/TestThreads.cpp',
     'xpcom/tests/gtest/TestUTF.cpp',
+    'docshell/base/nsILinkHandler.h',
     'dom/base/ChromeUtils.h',
     'dom/base/FeedWriterEnabled.h',
     'dom/base/NodeInfoInlines.h',
@@ -171,11 +173,13 @@ indentWhiteList = [
     'dom/telephony/ipc/TelephonyIPCSerializer.h',
     'dom/tv/FakeTVService.h',
     'ipc/chromium/src/base/atomicops_internals_mips_gcc.h',
+    'ipc/chromium/src/base/task.h',
     'ipc/chromium/src/base/thread_local_storage.h',
     'ipc/chromium/src/base/tuple.h',
     'ipc/chromium/src/chrome/common/notification_type.h',
     'ipc/chromium/src/chrome/common/result_codes.h',
     'ipc/glue/Transport_win.h',
+    'ipc/glue/Faulty.h',
   ]
 
 
