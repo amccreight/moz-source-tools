@@ -59,6 +59,7 @@ dirBlackList = [
     'dom/webbrowserpersist/',
     'dom/webauthn/cbor-cpp/src/',
     'layout/tables/',
+    'layout/tools/layout-debug/src/'
   ]
 
 # Don't try to fix these files.
@@ -106,6 +107,12 @@ fileBlackList = [
     'ipc/glue/MessageLink.cpp',
     'ipc/glue/ProtocolUtils.h',
     'layout/base/nsCounterManager.h',
+    'layout/generic/nsIntervalSet.h',
+    'layout/generic/nsIntervalSet.cpp',
+    'layout/style/nsCSSPropertyIDSet.h',
+    'layout/style/test/ParseCSS.cpp',
+    'layout/style/test/ListCSSProperties.cpp',
+    'layout/xul/nsTextBoxFrame.cpp',
   ]
 
 # Don't complain about apparently invalid indentation for these files.
@@ -186,6 +193,20 @@ indentWhiteList = [
     'layout/base/nsStyleChangeList.cpp',
     'layout/base/RestyleManagerInlines.h',
     'layout/build/nsContentDLF.h',
+    'layout/generic/nsColumnSetFrame.h',
+    'layout/style/nsCSSParser.h',
+    'layout/style/nsCSSPropAliasList.h',
+    'layout/style/nsCSSPropList.h',
+    'layout/style/nsCSSPseudoClassList.h',
+    'layout/style/nsMediaFeatures.h',
+    'layout/style/nsStyleTransformMatrix.h',
+    'layout/style/ServoBindingList.h',
+    'layout/style/StyleSetHandle.h',
+    'layout/xul/nsSplitterFrame.h',
+    'layout/xul/nsTitleBarFrame.cpp',
+    'layout/xul/PopupBoxObject.h',
+    'layout/xul/grid/nsGridRowLayout.cpp',
+    'layout/xul/tree/nsTreeContentView.h',
   ]
 
 
