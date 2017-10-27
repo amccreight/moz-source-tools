@@ -83,6 +83,7 @@ fileBlackList = [
     'dom/webidl/CSS2PropertiesProps.h',
     'gfx/2d/ShadersD2D.h',
     'gfx/2d/ShadersD2D1.h',
+    'gfx/webrender_bindings/webrender_ffi_generated.h',
     # Imported.
     'xpcom/build/mach_override.h',
     'bluedroid/b2g_bdroid_buildcfg.h',
