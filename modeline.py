@@ -58,6 +58,7 @@ dirBlackList = [
     'dom/system/gonk/android_audio/',
     'dom/webbrowserpersist/',
     'dom/webauthn/cbor-cpp/src/',
+    'layout/tables/',
   ]
 
 # Don't try to fix these files.
@@ -104,6 +105,7 @@ fileBlackList = [
     'ipc/glue/MessageLink.h',
     'ipc/glue/MessageLink.cpp',
     'ipc/glue/ProtocolUtils.h',
+    'layout/base/nsCounterManager.h',
   ]
 
 # Don't complain about apparently invalid indentation for these files.
@@ -180,6 +182,10 @@ indentWhiteList = [
     'ipc/chromium/src/chrome/common/result_codes.h',
     'ipc/glue/Transport_win.h',
     'ipc/glue/Faulty.h',
+    'layout/base/nsCaret.h',
+    'layout/base/nsStyleChangeList.cpp',
+    'layout/base/RestyleManagerInlines.h',
+    'layout/build/nsContentDLF.h',
   ]
 
 
