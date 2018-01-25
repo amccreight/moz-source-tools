@@ -4,16 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Modeline analyzer.
+# Components remover.
 
 import re
 import os
 import argparse
 
-ciPatt = re.compile("^\s*(const|let|var)\s+Ci\s*=\s*Components.interfaces\s*;\s*$")
-
-# this.Ci = Components.interfaces;
-thisPatt = re.compile("^this.Ci\s*\s*=\s*Components.interfaces\s*;$")
+# Require that there's no whitespace at the start of the line to hack around
+# the case where Cc, etc. is being defined inside a frame script.
+ciPatt = re.compile("^(const|let|var)\s+(Cc|Ci|Cr|Cu)\s*=\s*Components.(classes|interfaces|results|utils)\s*;\s*$")
 
 #const { utils: Cu, interfaces: Ci, classes: Cc, results: Cr } = Components;
 fieldPatt = "\w+\s*:\s*\w+\s*"
@@ -71,12 +70,7 @@ def fileAnalyzer(args, fname):
             anyFixes = True
             continue
 
-        if thisPatt.match(l):
-            print("Skipping this.Ci match in " + fname)
-            anyFixes = True
-            continue
-
-        deMatch = destructurePatt.match(l)
+        deMatch = None # XXX Disable this destructurePatt.match(l)
         if deMatch:
             x = extractFieldVals(deMatch.group(2))
             if x == "":
@@ -114,7 +108,7 @@ args = parser.parse_args()
 
 for (base, _, files) in os.walk(args.directory):
     for fileName in files:
-        if not (fileName.endswith('.js') or fileName.endswith('.jsm')):
+        if not fileName.endswith('.jsm'):
             continue
 
         # XXX Hacky way to not process files in the objdir.
