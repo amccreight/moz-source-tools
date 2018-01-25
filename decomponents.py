@@ -51,6 +51,13 @@ def extractFieldVals(prefix, bracketPrefix, s):
     if not l:
         return ""
 
+    if len(l) == 1:
+        # If there's only one variable being defined, don't bother
+        # with the fancy pattern matching syntax.
+        return prefix + " " + l[0][1] + " = Components." + l[0][0]
+
+    # XXX This doesn't seem to be needed anywhere in Firefox,
+    # so this code may have bitrotted.
     s2 = ""
     for e in l:
         s2 += e[0] + ": " + e[1] + ", "
@@ -62,7 +69,7 @@ def extractFieldVals(prefix, bracketPrefix, s):
         assert s[-2] != " "
         s2 += " "
 
-    return prefix + " " + bracketPrefix + s2 + "} = Components;"
+    return prefix + " " + bracketPrefix + s2 + "} = Components"
 
 
 # Hacky work around for a few cases where a "block" starts with a let
@@ -105,7 +112,7 @@ def fileAnalyzer(args, fname):
                     prevNotRemovedLineBlank = False
                     removedLastLine = False
                     if args.fixFiles:
-                        newFile.write(x + "\n")
+                        newFile.write(x + ";\n")
                         continue
 
         currLineBlank = bool(whiteSpacePatt.match(l))
