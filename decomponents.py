@@ -10,17 +10,19 @@ import re
 import os
 import argparse
 
-# Require that there's no whitespace at the start of the line to hack around
-# the case where Cc, etc. is being defined inside a frame script.
-ciPatt = re.compile("^(const|let|var)\s+(Cc|Ci|Cr|Cu)\s*=\s*Components.(classes|interfaces|results|utils)\s*;\s*$")
+# let Cu = Components.utils;
+ciPatt = re.compile("^\s*(const|let|var)\s+(Cc|Ci|Cr|Cu)\s*=\s*Components.(classes|interfaces|results|utils)\s*;\s*$")
 
-#const { utils: Cu, interfaces: Ci, classes: Cc, results: Cr } = Components;
+# const { utils: Cu, interfaces: Ci, classes: Cc, results: Cr } = Components;
 fieldPatt = "\w+\s*:\s*\w+\s*"
 bodyPatt = fieldPatt + "(?:,\s*" + fieldPatt + ")*"
-destructurePatt = re.compile("^\s*(const|let|var)\s*\{\s*(" + bodyPatt + ")\}\s*=\s*Components\s*;\s*$")
+destructurePatt = re.compile("^(\s*(?:const|let|var))\s*(\{\s*)(" + bodyPatt + ")\}\s*=\s*Components\s*;\s*$")
 
+whiteSpacePatt = re.compile("^\s*$")
 
-def extractFieldVals(s):
+matchDestructure = True
+
+def extractFieldVals(prefix, bracketPrefix, s):
     removedAny = False
     first = None
     l = []
@@ -33,7 +35,10 @@ def extractFieldVals(s):
             e1 = first
             e2 = e
             first = None
-            if e1 == "interfaces" and e2 == "Ci":
+            if ((e1 == "interfaces" and e2 == "Ci") or
+                (e1 == "utils" and e2 == "Cu") or
+                (e1 == "classes" and e2 == "Cc") or
+                (e1 == "results" and e2 == "Cr")):
                 removedAny = True
                 continue
             l.append((e1, e2))
@@ -46,20 +51,34 @@ def extractFieldVals(s):
     if not l:
         return ""
 
-    # XXX In practice, we're going to remove them all, so don't worry
-    # about a fancy pretty printer.  Though should throw in that case
-    # once I'm trying to get this working for real.
-    s = ""
+    s2 = ""
     for e in l:
-        s += e[0] + ": " + e[1] + ", "
-    s = s.rstrip(", ")
+        s2 += e[0] + ": " + e[1] + ", "
+    s2 = s2.rstrip(", ")
 
-    return s
+    # In practice, these patterns have zero or one spaces at the end.
+    # Make sure the trailing padding matches.
+    if s[-1] == " ":
+        assert s[-2] != " "
+        s2 += " "
 
+    return prefix + " " + bracketPrefix + s2 + "} = Components;"
+
+
+# Hacky work around for a few cases where a "block" starts with a let
+# followed by a blank line, and we want to get rid of the blank
+# line:
+#   // at the start of the line for comments
+#   */ at the end of the line for comments
+#   { at the end of the line for blocks in JS
+#   """ and ''' at the end of the line for Python with embedded JS.
+blockStartPatt = re.compile("(?:^//)|(?:^.*(?:\*/|\{|\"\"\"|''')\n$)")
 
 def fileAnalyzer(args, fname):
     f = open(fname, "r")
     anyFixes = False
+    prevNotRemovedLineBlank = True
+    removedLastLine = False
 
     if args.fixFiles:
         newFile = open(fname + ".intermediate", "w")
@@ -68,21 +87,33 @@ def fileAnalyzer(args, fname):
         if ciPatt.match(l):
             print("Skipping simple Ci match in " + fname)
             anyFixes = True
+            removedLastLine = True
             continue
 
-        deMatch = None # XXX Disable this destructurePatt.match(l)
-        if deMatch:
-            x = extractFieldVals(deMatch.group(2))
-            if x == "":
-                print("Removed all fields in " + fname)
-                anyFixes = True
-                continue
-            if x:
-                print("Removing fields in " + fname)
-                anyFixes = True
-                if args.fixFiles:
-                    newFile.write(deMatch.group(1) + " { " + x + " } = Components;\n")
+        if matchDestructure:
+            deMatch = destructurePatt.match(l)
+            if deMatch:
+                x = extractFieldVals(deMatch.group(1), deMatch.group(2), deMatch.group(3))
+                if x == "":
+                    print("Removed all fields in " + fname)
+                    anyFixes = True
+                    removedLastLine = True
                     continue
+                if x:
+                    print("Removing fields in " + fname)
+                    anyFixes = True
+                    prevNotRemovedLineBlank = False
+                    removedLastLine = False
+                    if args.fixFiles:
+                        newFile.write(x + "\n")
+                        continue
+
+        currLineBlank = bool(whiteSpacePatt.match(l))
+        if removedLastLine and prevNotRemovedLineBlank and currLineBlank:
+            continue
+
+        prevNotRemovedLineBlank = currLineBlank or blockStartPatt.match(l)
+        removedLastLine = False
 
         if args.fixFiles:
             newFile.write(l)
@@ -106,9 +137,12 @@ parser.add_argument('--fix', dest='fixFiles', action='store_true',
 
 args = parser.parse_args()
 
+# To save time, only look at file types that we think will contain JS.
+fileNamePatt = re.compile("^.+\.(?:js|jsm|html|py|sjs|xhtml|xul)$")
+
 for (base, _, files) in os.walk(args.directory):
     for fileName in files:
-        if not fileName.endswith('.jsm'):
+        if not fileNamePatt.match(fileName):
             continue
 
         # XXX Hacky way to not process files in the objdir.
