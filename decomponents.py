@@ -78,8 +78,9 @@ def extractFieldVals(prefix, bracketPrefix, s):
 #   // at the start of the line for comments
 #   */ at the end of the line for comments
 #   { at the end of the line for blocks in JS
+#   <![CDATA[ at the end of a line
 #   """ and ''' at the end of the line for Python with embedded JS.
-blockStartPatt = re.compile("(?:^//)|(?:^.*(?:\*/|\{|\"\"\"|''')\n$)")
+blockStartPatt = re.compile("(?:^//)|(?:^.*(?:\*/|\{|\<\!\[CDATA\[|\"\"\"|''')\n$)")
 
 def fileAnalyzer(args, fname):
     f = open(fname, "r")
