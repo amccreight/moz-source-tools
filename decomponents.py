@@ -160,4 +160,10 @@ for (base, _, files) in os.walk(args.directory):
             base += "/"
         fullFileName = base + fileName
 
+        # test_bug790732.html creates Ci in content.
+        # I'm not sure why dbg-actors fails to define Cu.
+        if fileName == "test_bug790732.html" or fileName == "dbg-actors.js":
+            print("Skipping blacklisted file " + fullFileName)
+            continue
+
         fileAnalyzer(args, fullFileName)
