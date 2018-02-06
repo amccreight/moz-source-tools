@@ -146,7 +146,10 @@ parser.add_argument('--fix', dest='fixFiles', action='store_true',
 args = parser.parse_args()
 
 # To save time, only look at file types that we think will contain JS.
-fileNamePatt = re.compile("^.+\.(?:js|jsm|html|py|sjs|xhtml|xul)$")
+# XXX Don't include .sjs files for now, because on Android hostutils
+# they can run on an old version of XPCShell that does not contain bug
+# 767640.
+fileNamePatt = re.compile("^.+\.(?:js|jsm|html|py|xhtml|xul)$")
 
 for (base, _, files) in os.walk(args.directory):
     for fileName in files:
@@ -165,6 +168,12 @@ for (base, _, files) in os.walk(args.directory):
         # I'm not sure why dbg-actors fails to define Cu.
         if fileName == "test_bug790732.html" or fileName == "dbg-actors.js":
             print("Skipping blacklisted file " + fullFileName)
+            continue
+
+        # XXX Skip httpd.js because this requires a version bump of
+        # hostutils for Android.
+        if fileName == "httpd.js":
+            print("Skipping blacklisted server file " + fullFileName)
             continue
 
         fileAnalyzer(args, fullFileName)
