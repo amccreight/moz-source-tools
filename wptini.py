@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Modeline analyzer.
+# WPT lsan-allowed ini file fixer.
 
 import re
 import os
@@ -12,6 +12,28 @@ import argparse
 
 
 lsanAllowedPatt = re.compile("^lsan-allowed: \[(.*)\]")
+
+
+blacklistedDirectories = [
+    # The base directory has some generic JS stuff.
+    "",
+
+    # Permaleaks.
+    "html/semantics/forms/form-submission-0/", # bug 1517577
+    "encrypted-media/", # bug 1517595
+    "fetch/api/request/", # bug 1517600
+    "FileAPI/file/", # bug 1518230
+    "FileAPI/FileReader/", # bug 1517071
+    "webauthn/", # bug 1517611
+    "WebCryptoAPI/generateKey/", # bug 1517574
+    "websockets/", # bug 1517601
+
+    # Intermittent leaks.
+    "fetch/api/basic/", # bug 1518298
+    "fetch/api/abort/", # Leak of a single string.
+    "infrastructure/server/", # Websocket stuff.
+]
+
 
 def fileAnalyzer(args, fname):
     f = open(fname, "r")
@@ -26,10 +48,18 @@ def fileAnalyzer(args, fname):
                 newFile.write(l)
             continue
 
-        whitelists = m.group(1).split(',')
+        whitelists = m.group(1).split(', ')
 
         if whitelists[0] == '':
             # Don't bother printing out empty white lists.
+            continue
+
+        if 'nsHostResolver::ResolveHost' in whitelists:
+            # This leak was fixed by bug 1467914.
+            continue
+
+        if True:
+            # Try out removing white lists from all non blacklisted files.
             continue
 
         if args.fixFiles:
@@ -53,15 +83,29 @@ args = parser.parse_args()
 
 blacklist = []
 
-directory = args.directory + 'testing/web-platform/meta/'
+iniFileName = '__dir__.ini'
+wptDirectory = 'testing/web-platform/meta'
 
-for (base, _, files) in os.walk(args.directory):
-    for fileName in files:
+directory = args.directory
+if not directory.endswith("/"):
+    directory += "/"
+directory = args.directory + wptDirectory
 
-        if fileName != '__dir__.ini':
-            continue
+blacklistedDirPatt = re.compile('^{base}{wpt}(?:{dirs})$'.format(base = re.escape(args.directory),
+                                                                 wpt = re.escape(wptDirectory),
+                                                                 dirs = "|".join(["/" + re.escape(s) for s in blacklistedDirectories])))
 
-        if not base.endswith("/"):
-            base += "/"
-        fullFileName = base + fileName
-        fileAnalyzer(args, fullFileName)
+
+for (base, _, files) in os.walk(directory):
+    if not iniFileName in files:
+        continue
+
+    if not base.endswith("/"):
+        base += "/"
+
+    if blacklistedDirPatt.match(base):
+        print 'Skipping blacklisted file in', base
+        continue
+
+    fullFileName = base + iniFileName
+    fileAnalyzer(args, fullFileName)
