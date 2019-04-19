@@ -161,6 +161,9 @@ for (base, _, files) in os.walk(args.directory):
         if "obj-" in base:
             continue
 
+        if ".git" in base or ".hg" in base:
+            continue
+
         # Some eslint files deal with generateQI, so just ignore them.
         if "tools/lint/eslint/" in base:
             continue
