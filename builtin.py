@@ -91,6 +91,8 @@ def generateQIFinder(args, fname, jsImplementedInterfaces):
     f.close()
 
 
+forwardDeclPatt = re.compile("^interface [A-Za-z0-9_-]+;$")
+
 # Look at XPIDL files for interfaces that are not marked builtinclass.
 def idlFileAnalyzer(args, fname, jsImplementedInterfaces, nonBuiltinInterfaces):
     f = open(fname, "r")
@@ -103,8 +105,8 @@ def idlFileAnalyzer(args, fname, jsImplementedInterfaces, nonBuiltinInterfaces):
         if not l.startswith("interface "):
             prevLine = l
             continue
-        if l.endswith(";"):
-            # Just a forward declaration. Ignore it.
+        # Just a forward declaration. Ignore it.
+        if forwardDeclPatt.match(l):
             prevLine = None
             continue
         interface = l.split()[1].strip(":")
