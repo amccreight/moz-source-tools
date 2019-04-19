@@ -201,7 +201,8 @@ for (base, _, files) in os.walk(args.directory):
             generateQIFinder(args, fullFileName, jsImplementedInterfaces)
 
 
-builtinClassable = nonBuiltinInterfaces - jsImplementedInterfaces
+builtinClassable = list(nonBuiltinInterfaces - jsImplementedInterfaces)
+builtinClassable.sort()
 
 
 print "Interfaces that might be markable as builtinclass:"
