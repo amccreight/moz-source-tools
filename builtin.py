@@ -127,7 +127,7 @@ def idlFileAnalyzer(args, fname, jsImplementedInterfaces, nonBuiltinInterfaces):
             print fname, prevLine
         assert anyUUID
         if not builtinClass:
-            nonBuiltinInterfaces.add(interface)
+            nonBuiltinInterfaces.setdefault(interface, []).append(fname)
 
 
     f.close()
@@ -141,19 +141,17 @@ parser = argparse.ArgumentParser(description='Find XPIDL interfaces that could b
 parser.add_argument('directory', metavar='D',
                     help='Full path of directory to open files from')
 
-parser.add_argument('--fix', dest='fixFiles', action='store_true',
-                    help='Fix any errors that are found')
+parser.add_argument('--showdir', dest='showDir', action='store_true',
+                    help='show the directory the IDL file is located in')
 
 args = parser.parse_args()
 
 jsImplementedInterfaces = set([])
-nonBuiltinInterfaces = set([])
+nonBuiltinInterfaces = {}
+
 
 for (base, _, files) in os.walk(args.directory):
     for fileName in files:
-        #if not (fileName.endswith('.js') or fileName.endswith('.jsm')):
-        #    continue
-
         if fileName.endswith('.cpp') or fileName.endswith('.h') or fileName.endswith('~'):
             continue
 
@@ -206,11 +204,23 @@ for (base, _, files) in os.walk(args.directory):
             generateQIFinder(args, fullFileName, jsImplementedInterfaces)
 
 
-builtinClassable = list(nonBuiltinInterfaces - jsImplementedInterfaces)
-builtinClassable.sort()
+builtinClassable = set(nonBuiltinInterfaces.keys()) - jsImplementedInterfaces
 
 
+if not args.showDir:
+    output = list(builtinClassable)
+else:
+    baseDirLen = len(args.directory)
+    output = []
+    for i in builtinClassable:
+        for baseIdir in nonBuiltinInterfaces[i]:
+            idir = baseIdir[baseDirLen:]
+            idir = idir[:idir.rfind("/")]
+            output.append(idir + " " + i)
+
+
+output.sort()
 print "Interfaces that might be markable as builtinclass:"
-for i in builtinClassable:
+for i in output:
     print i
 print
