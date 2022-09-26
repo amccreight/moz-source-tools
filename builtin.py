@@ -154,12 +154,13 @@ args = parser.parse_args()
 jsImplementedInterfaces = set([])
 nonBuiltinInterfaces = {}
 
+validExtensions = [".sys.mjs", ".jsm", ".js", ".xhtml", ".html", ".sjs", ".idl"]
+validFileRe = re.compile("^.*(?:" + '|'.join(map(lambda e: "(?:" + re.escape(e) + ")", validExtensions)) + ")$")
 
 for (base, _, files) in os.walk(args.directory):
     for fileName in files:
-
-        if not (fileName.endswith(".sys.mjs") or fileName.endswith(".jsm") or fileName.endswith(".js") or
-                fileName.endswith(".xhtml") or fileName.endswith(".html") or fileName.endswith(".sjs")):
+        # Using a regexp seems like it is slightly slower but whatever.
+        if not(validFileRe.match(fileName)):
             continue
 
         #if fileName.endswith('.cpp') or fileName.endswith('.h') or fileName.endswith('~'):
