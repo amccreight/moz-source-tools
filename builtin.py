@@ -18,6 +18,7 @@ weirdInterfacesToIgnore = [
     "IJSDebugger",
     "inIDeepTreeWalker",
     "IUrlClassifierUITelemetry",
+    "extIWebNavigation",
 ]
 weirdInterfacesToIgnorePatt = re.compile("^" + "|".join(weirdInterfacesToIgnore) + "$")
 
@@ -28,6 +29,8 @@ def assertInterfaceOkay(fname, interface):
         return
     raise Exception("Bad interface " + interface + " in file " + fname)
 
+# Searching for the entire ChromeUtils.generateQI seems reasonable:
+# https://searchfox.org/mozilla-central/search?q=%5B%5Es%5D.generateqi&path=&case=false&regexp=true
 
 # Look for calls to ChromeUtils.generateQI and add any interfaces found to the
 # set |jsImplementedInterfaces|.
@@ -84,6 +87,8 @@ def generateQIFinder(args, fname, jsImplementedInterfaces):
             elif interface.startswith("parentCi."):
                 interface = interface[9:]
             assertInterfaceOkay(fname, interface)
+            if not interface in jsImplementedInterfaces:
+                print(interface)
             jsImplementedInterfaces.add(interface)
 
         qiArgString = None
@@ -152,8 +157,13 @@ nonBuiltinInterfaces = {}
 
 for (base, _, files) in os.walk(args.directory):
     for fileName in files:
-        if fileName.endswith('.cpp') or fileName.endswith('.h') or fileName.endswith('~'):
+
+        if not (fileName.endswith(".sys.mjs") or fileName.endswith(".jsm") or fileName.endswith(".js") or
+                fileName.endswith(".xhtml") or fileName.endswith(".html") or fileName.endswith(".sjs")):
             continue
+
+        #if fileName.endswith('.cpp') or fileName.endswith('.h') or fileName.endswith('~'):
+        #    continue
 
         # XXX Hacky way to not process files in the objdir.
         if "obj-" in base:
@@ -166,12 +176,16 @@ for (base, _, files) in os.walk(args.directory):
         if "tools/lint/eslint/" in base:
             continue
 
-        # This file contains a false positive generateQI, from a commit message.
-        if fileName == ".hg-annotate-ignore-revs":
+        # There are a lot of these files, and they don't use generateQI.
+        if "testing/web-platform/" in base:
+            continue
+        if "js/src/tests/" in base:
             continue
 
-        # This is a patch file that causes a false positive.
-        if fileName == "fluent.js.patch":
+        # These files contain a false positive generateQI, from a commit message.
+        if fileName == ".hg-annotate-ignore-revs":
+            continue
+        if fileName == ".git-blame-ignore-revs":
             continue
 
         if not base.endswith("/"):
