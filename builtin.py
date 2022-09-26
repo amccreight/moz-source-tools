@@ -87,8 +87,6 @@ def generateQIFinder(args, fname, jsImplementedInterfaces):
             elif interface.startswith("parentCi."):
                 interface = interface[9:]
             assertInterfaceOkay(fname, interface)
-            if not interface in jsImplementedInterfaces:
-                print(interface)
             jsImplementedInterfaces.add(interface)
 
         qiArgString = None
@@ -98,8 +96,8 @@ def generateQIFinder(args, fname, jsImplementedInterfaces):
 
 forwardDeclPatt = re.compile("^interface [A-Za-z0-9_-]+;$")
 
-# Look at XPIDL files for interfaces that are not marked builtinclass.
-def idlFileAnalyzer(args, fname, jsImplementedInterfaces, nonBuiltinInterfaces):
+# Look at XPIDL files for interfaces that are implementable by JS.
+def idlFileAnalyzer(args, fname, maybeBuiltinables):
     f = open(fname, "r")
     prevLine = None
 
@@ -117,12 +115,20 @@ def idlFileAnalyzer(args, fname, jsImplementedInterfaces, nonBuiltinInterfaces):
         interface = l.split()[1].strip(":")
         assertInterfaceOkay(fname, interface)
 
-        attributes = prevLine.strip().strip("[]").split(", ")
+        attributes = prevLine.strip().strip("[]").split(",")
+        attributes = list(map(lambda l: l.strip(), attributes))
+        scriptable = False
         builtinClass = False
+        function = False
         anyUUID = False
         for a in attributes:
+            if a == 'scriptable':
+                scriptable = True
             if a == 'builtinclass':
                 builtinClass = True
+                continue
+            if a == 'function':
+                function = True
                 continue
             if a.startswith('uuid'):
                 assert not anyUUID
@@ -130,16 +136,22 @@ def idlFileAnalyzer(args, fname, jsImplementedInterfaces, nonBuiltinInterfaces):
                 continue
         if not anyUUID:
             print fname, prevLine
+        # Assert we found a UUID to guard against bugs in our crude parser.
         assert anyUUID
-        if not builtinClass:
-            nonBuiltinInterfaces.setdefault(interface, []).append(fname)
+
+        # It doesn't make sense to mark non-scriptable interfaces builtinclass.
+        assert scriptable or not builtinClass
+
+        # If something isn't scriptable, we don't want to make it builtinclass.
+        # If something is already builtinclass, we don't want to make it builtinclass.
+        # If something is a function, we can't analyze whether it is used by JS.
+        if scriptable and not builtinClass and not function:
+            maybeBuiltinables.setdefault(interface, []).append(fname)
 
 
     f.close()
 
 
-
-# Finally, print out a list of interfaces in the second group but not the first. Ideally, auto fix.
 
 
 parser = argparse.ArgumentParser(description='Find XPIDL interfaces that could be marked builtinclass')
@@ -152,7 +164,7 @@ parser.add_argument('--showdir', dest='showDir', action='store_true',
 args = parser.parse_args()
 
 jsImplementedInterfaces = set([])
-nonBuiltinInterfaces = {}
+maybeBuiltinables = {}
 
 validExtensions = [".sys.mjs", ".jsm", ".js", ".xhtml", ".html", ".sjs", ".idl"]
 validFileRe = re.compile("^.*(?:" + '|'.join(map(lambda e: "(?:" + re.escape(e) + ")", validExtensions)) + ")$")
@@ -200,11 +212,8 @@ for (base, _, files) in os.walk(args.directory):
             continue
 
         if fileName.endswith(".idl"):
-            # The WPT directory contains a number of WebIDL files with the extension .idl.
-            if "/testing/web-platform" in base:
-                continue
             # This is a WebIDL-ish file.
-            if fullFileName.endswith("browser/components/translation/cld2/cld.idl"):
+            if fullFileName.endswith("toolkit/components/translation/cld2/cld.idl"):
                 continue
             # Some accessible subdirectories contains some Windows IDL files with the .idl extension.
             if "accessible/ipc/win/" in base:
@@ -213,13 +222,18 @@ for (base, _, files) in os.walk(args.directory):
                 if "/msaa" in fullFileName or "/gecko" in fullFileName or "/ia2" in fullFileName:
                     continue
 
-            idlFileAnalyzer(args, fullFileName, jsImplementedInterfaces,
-                            nonBuiltinInterfaces)
+            idlFileAnalyzer(args, fullFileName, maybeBuiltinables)
         else:
             generateQIFinder(args, fullFileName, jsImplementedInterfaces)
 
+# XXX Also need to take into account the handful of do_ImportModule interfaces.
 
-builtinClassable = set(nonBuiltinInterfaces.keys()) - jsImplementedInterfaces
+# XXX It seems like a static analysis is doomed, because you can just pass in
+# random JS objects to XPCOM and it is fine with not having a QI?
+# An example of this is nsIWorkerDebuggerManagerListener which is used as
+# an argument to nsIWorkerDebuggerManager, and some random JS object gets passed in.
+
+builtinClassable = set(maybeBuiltinables.keys()) - jsImplementedInterfaces
 
 
 if not args.showDir:
@@ -228,7 +242,7 @@ else:
     baseDirLen = len(args.directory)
     output = []
     for i in builtinClassable:
-        for baseIdir in nonBuiltinInterfaces[i]:
+        for baseIdir in maybeBuiltinables[i]:
             idir = baseIdir[baseDirLen:]
             idir = idir[:idir.rfind("/")]
             output.append(idir + " " + i)
