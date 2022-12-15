@@ -167,13 +167,13 @@ for (base, _, files) in os.walk(args.directory):
         # test_bug790732.html creates Ci in content.
         # I'm not sure why dbg-actors fails to define Cu.
         if fileName == "test_bug790732.html" or fileName == "dbg-actors.js":
-            print("Skipping blacklisted file " + fullFileName)
+            print("Skipping ignore listed file " + fullFileName)
             continue
 
         # XXX Skip httpd.js because this requires a version bump of
         # hostutils for Android.
         if fileName == "httpd.js":
-            print("Skipping blacklisted server file " + fullFileName)
+            print("Skipping ignore listed server file " + fullFileName)
             continue
 
         fileAnalyzer(args, fullFileName)

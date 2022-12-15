@@ -32,7 +32,7 @@ mplSpacerPatt = re.compile("^\s+\*\s*$")
 chromiumLicensePatt = re.compile("// Copyright(?: \(c\))? 2[0-9]{3}(?:\-2[0-9]{3})? (?:The Chromium Authors|the V8 project authors). All rights reserved.\n")
 
 # Skip files that have these anywhere in their path.
-wideDirBlackList = [
+wideDirIgnoreList = [
     'xpcom/reflect/', # This dir seems all 4-space indented.
     'xpcom/rust/gtest/',
     'dom/media/', # There's a lot of this, and lots is imported.
@@ -55,7 +55,7 @@ wideDirBlackList = [
 
 # Don't try to fix files in these directories, which have a lot of
 # files with 4-space indent.
-dirBlackList = [
+dirIgnoreList = [
     'xpcom/tests/',
     'xpcom/tests/windows/',
     'xpcom/tests/gtest/',
@@ -77,7 +77,7 @@ dirBlackList = [
   ]
 
 # Don't try to fix these files.
-fileBlackList = [
+fileIgnoreList = [
     # Not regular source files.
     'xpcom/base/ErrorList.h',
     'dom/webidl/CSS2PropertiesProps.h',
@@ -160,7 +160,7 @@ fileBlackList = [
 # Don't complain about apparently invalid indentation for these files.
 # Mostly these are files that have a bunch of declarations or methods
 # with short bodies.
-indentWhiteList = [
+indentAllowList = [
     'xpcom/io/nsStreamUtils.h',
     'xpcom/string/nsReadableUtils.h',
     'xpcom/build/nsXULAppAPI.h',
@@ -274,27 +274,27 @@ def patternifyList(l):
     return re.compile("^.*(?:{core})$".format(core = "|".join([re.escape(s) for s in l])))
 
 
-wideDirBlackList = re.compile("^.*(?:{core}).*$".format(core = "|".join([re.escape(s) for s in wideDirBlackList])))
+wideDirIgnoreList = re.compile("^.*(?:{core}).*$".format(core = "|".join([re.escape(s) for s in wideDirIgnoreList])))
 
-dirBlackListPatt = patternifyList(dirBlackList)
-fileBlackListPatt = patternifyList(fileBlackList)
-indentWhiteListPatt = patternifyList(indentWhiteList)
+dirIgnoreListPatt = patternifyList(dirIgnoreList)
+fileIgnoreListPatt = patternifyList(fileIgnoreList)
+indentAllowListPatt = patternifyList(indentAllowList)
 
 
-def fileInBlackList(base, fileName):
-    if wideDirBlackList.match(base):
+def fileInIgnoreList(base, fileName):
+    if wideDirIgnoreList.match(base):
         return True
 
-    if dirBlackListPatt.match(base):
+    if dirIgnoreListPatt.match(base):
         return True
 
-    if fileBlackListPatt.match(base + fileName):
+    if fileIgnoreListPatt.match(base + fileName):
         return True
 
     return False
 
-def fileInIndentWhiteList(fileName):
-    if indentWhiteListPatt.match(fileName):
+def fileInIndentAllowList(fileName):
+    if indentAllowListPatt.match(fileName):
         return True
     return False
 
@@ -465,7 +465,7 @@ def fileAnalyzer(args, fname):
         elif count4 > (count4 + countOther) * 0.6:
             probablyIndentedBy = 4
         elif countOther > (count2 + count4 + countOther) / 2:
-            if fileInIndentWhiteList(fname):
+            if fileInIndentAllowList(fname):
                 probablyIndentedBy = 2
             else:
                 print '\n\nERROR!!!!'
@@ -476,7 +476,7 @@ def fileAnalyzer(args, fname):
                 print '\tcountOther: ', countOther
                 exit(-1)
 
-    if probablyIndentedBy != 2 and not fileInIndentWhiteList(fname):
+    if probablyIndentedBy != 2 and not fileInIndentAllowList(fname):
         print 'Weird file', fname
         print '\tcount0: ', count0
         print '\tcount2: ', count2
@@ -500,7 +500,7 @@ parser.add_argument('--tabs', dest='tabs', action='store_true',
 
 args = parser.parse_args()
 
-blacklist = []
+ignorelist = []
 
 for (base, _, files) in os.walk(args.directory):
 
@@ -512,13 +512,13 @@ for (base, _, files) in os.walk(args.directory):
             base += "/"
         fullFileName = base + fileName
 
-        if fileInBlackList(base, fileName):
-            blacklist.append(fullFileName)
+        if fileInIgnoreList(base, fileName):
+            ignorelist.append(fullFileName)
             continue
 
         fileAnalyzer(args, fullFileName)
 
-if blacklist:
-    print 'Skipped files due to blacklist:'
-    for f in blacklist:
+if ignorelist:
+    print 'Skipped files due to ignore list:'
+    for f in ignorelist:
         print '   ', f

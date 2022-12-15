@@ -14,7 +14,7 @@ import argparse
 lsanAllowedPatt = re.compile("^lsan-allowed: \[(.*)\]")
 
 
-blacklistedDirectories = [
+ignorelistedDirectories = [
     # The base directory has some generic JS stuff.
     "",
 
@@ -48,18 +48,18 @@ def fileAnalyzer(args, fname):
                 newFile.write(l)
             continue
 
-        whitelists = m.group(1).split(', ')
+        allowlists = m.group(1).split(', ')
 
-        if whitelists[0] == '':
-            # Don't bother printing out empty white lists.
+        if allowlists[0] == '':
+            # Don't bother printing out empty allow lists.
             continue
 
-        if 'nsHostResolver::ResolveHost' in whitelists:
+        if 'nsHostResolver::ResolveHost' in allowlists:
             # This leak was fixed by bug 1467914.
             continue
 
         if True:
-            # Try out removing white lists from all non blacklisted files.
+            # Try out removing allow lists from all non ignore listed files.
             continue
 
         if args.fixFiles:
@@ -81,7 +81,7 @@ parser.add_argument('--fix', dest='fixFiles', action='store_true',
 
 args = parser.parse_args()
 
-blacklist = []
+ignorelist = []
 
 iniFileName = '__dir__.ini'
 wptDirectory = 'testing/web-platform/meta'
@@ -91,9 +91,9 @@ if not directory.endswith("/"):
     directory += "/"
 directory = args.directory + wptDirectory
 
-blacklistedDirPatt = re.compile('^{base}{wpt}(?:{dirs})$'.format(base = re.escape(args.directory),
-                                                                 wpt = re.escape(wptDirectory),
-                                                                 dirs = "|".join(["/" + re.escape(s) for s in blacklistedDirectories])))
+ignorelistedDirPatt = re.compile('^{base}{wpt}(?:{dirs})$'.format(base = re.escape(args.directory),
+                                                                  wpt = re.escape(wptDirectory),
+                                                                  dirs = "|".join(["/" + re.escape(s) for s in ignorelistedDirectories])))
 
 
 for (base, _, files) in os.walk(directory):
@@ -103,8 +103,8 @@ for (base, _, files) in os.walk(directory):
     if not base.endswith("/"):
         base += "/"
 
-    if blacklistedDirPatt.match(base):
-        print 'Skipping blacklisted file in', base
+    if ignorelistedDirPatt.match(base):
+        print 'Skipping ignore listed file in', base
         continue
 
     fullFileName = base + iniFileName
