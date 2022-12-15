@@ -47,6 +47,7 @@ def fileInIgnoreList(base, fileName):
 
 def fileAnalyzer(args, fname):
     f = open(fname, "r")
+    skipNext = False
 
     if args.fixFiles:
         tempFileName = fname + ".intermediate"
@@ -54,11 +55,17 @@ def fileAnalyzer(args, fname):
         newFile = open(tempFileName, "w")
 
     for l in f:
+        if skipNext:
+            print("\tSkipped line " + l[:-1])
+            skipNext = False
+            continue
+
         lp = linePatt.match(l)
         if lp:
             print("Matched line " + l[:-1])
-            # XXX It would be better if this validated that the line ended with a close paren.
             anyFixed = True
+            if l[-2] != ")":
+                skipNext = True
             continue
         if args.fixFiles:
             newFile.write(l)
