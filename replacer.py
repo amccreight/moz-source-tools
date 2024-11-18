@@ -4,30 +4,34 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# nsINode::eText remover.
+# Replace text in files matching a pattern.
 
 import re
 import os
 import argparse
 
+# To save time, only look at file types that we think will contain C++.
+fileNamePatt = re.compile("^.+\\.(?:cpp|h|cc|mm)$")
 
-def fileAnalyzer(args, fname):
-    f = open(fname, "r")
+def fileAnalyzer(args, fname, encoding):
+    f = open(fname, "r", encoding=encoding)
     anyFixes = False
 
     if args.fixFiles:
         newFile = open(fname + ".intermediate", "w")
 
     for l in f:
-        l2 = l.replace("IsNodeOfType(nsINode::eTEXT)", "IsText()")
+        l2 = l.replace("MOZ_DIAGNOSTIC_ASSERT(false, ", "MOZ_DIAGNOSTIC_CRASH(")
         if l2 == l:
-            l2 = l.replace("IsNodeOfType(eTEXT)", "IsText()")
+            l2 = l.replace("MOZ_DIAGNOSTIC_ASSERT(false,", "MOZ_DIAGNOSTIC_CRASH(")
         if l2 != l:
-            print "found something in file %s" % fname
+            print("found something in file %s" % fname)
             anyFixes = True
             if args.fixFiles:
                 newFile.write(l2)
                 continue
+            print(l[:-1])
+            print(l2[:-1])
             continue
         if args.fixFiles:
             newFile.write(l)
@@ -42,7 +46,7 @@ def fileAnalyzer(args, fname):
             os.remove(fname + ".intermediate")
 
 
-parser = argparse.ArgumentParser(description='Eliminate uses of nsINode::eTEXT')
+parser = argparse.ArgumentParser(description='Replace text in C++ files')
 parser.add_argument('directory', metavar='D',
                     help='Full path of directory to open files from')
 
@@ -51,8 +55,6 @@ parser.add_argument('--fix', dest='fixFiles', action='store_true',
 
 args = parser.parse_args()
 
-# To save time, only look at file types that we think will contain C++.
-fileNamePatt = re.compile("^.+\.(?:cpp|h)$")
 
 for (base, _, files) in os.walk(args.directory):
     for fileName in files:
@@ -67,4 +69,8 @@ for (base, _, files) in os.walk(args.directory):
             base += "/"
         fullFileName = base + fileName
 
-        fileAnalyzer(args, fullFileName)
+        try:
+            fileAnalyzer(args, fullFileName, "utf8")
+        except UnicodeDecodeError:
+            print("utf8 encoding failed for " + fullFileName)
+            fileAnalyzer(args, fullFileName, "latin-1")
